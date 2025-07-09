@@ -4,7 +4,9 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
-  styleUrls: ['./game.component.css']
+  styleUrls: ['./game.component.css'],
+  standalone: true,
+  imports: []
 })
 export class GameComponent implements OnInit {
   gameId: string | null = null;
