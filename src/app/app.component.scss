@@ -1,0 +1,19 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  height: calc(100vh - 64px); /* 64px is default height of mat-toolbar */
+  box-sizing: border-box;
+}
+
+.main-card {
+  width: 85%;
+  height: 100%;
+  overflow: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}

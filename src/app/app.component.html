@@ -1,0 +1,14 @@
+<mat-toolbar color="primary">
+  <span>Hello World App</span>
+  <span class="spacer"></span>
+  <button mat-button *ngIf="authService.UserData" (click)="logout()">Log Out</button>
+</mat-toolbar>
+
+<div class="content-wrapper">
+  <mat-card class="main-card">
+    <mat-card-content>
+      <router-outlet></router-outlet>
+    </mat-card-content>
+
+  </mat-card>
+</div>

@@ -1,0 +1,19 @@
+<div *ngIf="mode === 'local'">
+  <h2>Start Local GameComponent</h2>
+  <p>Add at least two player names:</p>
+  <div *ngFor="let name of playerNames; let i = index">
+    <input [(ngModel)]="playerNames[i]" placeholder="Player {{ i + 1 }}" />
+  </div>
+  <button (click)="addPlayerField()">Add Player</button>
+  <button (click)="submitLocalGame()">Start GameComponent</button>
+</div>
+
+<div *ngIf="mode === 'remote' && gameId">
+  <h2>Share This Link</h2>
+  <p>Send this to your friend to join the game:</p>
+  <code>{{ 'https://yourapp.com/game/' + gameId }}</code>
+</div>
+
+<div *ngIf="mode === 'solo'">
+  <p>Creating solo game...</p>
+</div>
