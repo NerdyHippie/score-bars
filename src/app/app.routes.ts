@@ -18,5 +18,9 @@ export const routes: Routes = [
     loadComponent: () => import('./components/game/game.component').then(m => m.GameComponent),
     canActivate: [canActivate]
   },
+  {
+    path: 'new-game',
+    loadComponent: () => import('./components/new-game/new-game.component').then(m => m.NewGameComponent)
+  },
   { path: '**', redirectTo: '' }
 ];

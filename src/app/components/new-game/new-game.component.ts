@@ -1,57 +1,66 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
+import { inject } from '@angular/core';
+import { Auth } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+interface Player {
+  name: string;
+}
+
 @Component({
   selector: 'app-new-game',
+  standalone: true,
   templateUrl: './new-game.component.html',
   styleUrls: ['./new-game.component.css'],
-  standalone: true,
-  imports: [ CommonModule, FormsModule ]
+  imports: [CommonModule, FormsModule],
 })
 export class NewGameComponent implements OnInit {
   mode: 'remote' | 'local' | 'solo' | null = null;
-  playerNames: string[] = ['',''];
+  players: Player[] = [{ name: 'Player 1' }, { name: 'Player 2' }];
   gameId: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private firestore: Firestore
-  ) {}
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
   ngOnInit(): void {
     this.mode = this.route.snapshot.queryParamMap.get('mode') as any;
 
     if (this.mode === 'solo') {
-      this.createGame(['Solo Player']);
+      this.createGame([{ name: 'Solo Player' }]);
     } else if (this.mode === 'remote') {
-      this.createGame([]); // no players yet, waiting for invite
+      this.createGame([]); // wait for players to join remotely
     }
-    // local mode will show the form
   }
 
   addPlayerField() {
-    this.playerNames.push('');
+    this.players.push({ name: `Player ${this.players.length + 1}` });
   }
 
   async submitLocalGame() {
-    const names = this.playerNames.filter(name => name.trim());
-    if (names.length < 2) return alert('Please enter at least 2 player names.');
-    await this.createGame(names);
+    const filteredPlayers = this.players
+      .map(p => ({ name: p.name.trim() }))
+      .filter(p => p.name);
+
+    if (filteredPlayers.length < 2) return alert('Please enter at least 2 player names.');
+
+    await this.createGame(filteredPlayers);
   }
 
-  async createGame(players: string[]) {
-    const gamesCollection = collection(this.firestore, 'games');
-    const docRef = await addDoc(gamesCollection, {
-      players,
+  async createGame(players: Player[]) {
+    const uid = this.auth.currentUser?.uid ?? 'anonymous';
+    const gamesRef = collection(this.firestore, 'games');
+    const newGame = await addDoc(gamesRef, {
+      createdBy: uid,
+      players: players,
+      scores: players.map(() => 0),
       createdAt: new Date(),
       mode: this.mode
     });
-    this.gameId = docRef.id;
-    this.router.navigate(['/game', this.gameId]);
+    this.router.navigate(['/game', newGame.id]);
   }
 }
