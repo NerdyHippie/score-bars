@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChildren, ElementRef, QueryList } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
@@ -22,6 +22,8 @@ export class NewGameComponent implements OnInit {
   players: Player[] = [{ name: 'Player 1' }, { name: 'Player 2' }];
   gameId: string | null = null;
 
+  @ViewChildren('playerInput') playerInputs!: QueryList<ElementRef>;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
@@ -39,6 +41,14 @@ export class NewGameComponent implements OnInit {
 
   addPlayerField() {
     this.players.push({ name: `Player ${this.players.length + 1}` });
+    setTimeout(() => {
+      const inputs = this.playerInputs.toArray();
+      const lastInput = inputs[inputs.length - 1];
+      if (lastInput) {
+        lastInput.nativeElement.focus();
+        lastInput.nativeElement.select();
+      }
+    });
   }
 
   async submitLocalGame() {

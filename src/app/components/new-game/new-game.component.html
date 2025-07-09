@@ -2,7 +2,7 @@
   <h2>Start a Local Game</h2>
   <p>Enter player names:</p>
   <div *ngFor="let player of players; let i = index">
-    <input [(ngModel)]="player.name" placeholder="Player {{ i + 1 }}" />
+    <input #playerInput [(ngModel)]="player.name" (focus)="playerInput.select()" placeholder="Player {{ i + 1 }}" />
   </div>
   <button (click)="addPlayerField()">+ Add Player</button>
   <button (click)="submitLocalGame()">Start Game</button>
