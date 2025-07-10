@@ -19,6 +19,7 @@ export class GameComponent implements OnInit {
   scores: number[] = [];
   currentPlayerIndex: number = 0;
   dice: number[] = [1, 2, 3, 4, 5, 6];
+  finalRoll: number[] = [];
   rolling = false;
 
   constructor(private route: ActivatedRoute, private router: Router, private firestore: Firestore) {}
@@ -42,22 +43,24 @@ export class GameComponent implements OnInit {
   rollDice() {
     this.rolling = true;
     const rollDuration = 500 + Math.random() * 1000;
+
+    // Generate final dice values once at the beginning
+    this.finalRoll = this.dice.map(() => Math.floor(Math.random() * 6) + 1);
+
     const interval = setInterval(() => {
       this.dice = this.dice.map(() => Math.floor(Math.random() * 6) + 1);
     }, 100);
 
     setTimeout(() => {
       clearInterval(interval);
-      this.dice = this.dice.map(() => Math.floor(Math.random() * 6) + 1);
+      this.dice = [...this.finalRoll]; // display the final roll
       this.rolling = false;
-      const score = this.calculateScore(this.dice);
+      const score = this.calculateScore(this.finalRoll);
       this.scores[this.currentPlayerIndex] += score;
     }, rollDuration);
   }
 
   calculateScore(dice: number[]): number {
-
-    console.log(`dice: ${dice}`);
     const counts: { [key: number]: number } = {};
     for (const die of dice) {
       counts[die] = (counts[die] || 0) + 1;
