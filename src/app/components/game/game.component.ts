@@ -39,7 +39,10 @@ export class GameComponent implements OnInit {
     const gameDoc = await getDoc(doc(this.firestore, `games/${this.gameId}`));
     const data: any = gameDoc.data();
     this.players = data.players;
-    this.scores = Array(this.players.length).fill(0);
+    this.scores = data.scores || Array(this.players.length).fill(0);
+    if (typeof data.lastPlayer === 'number') {
+      this.currentPlayerIndex = (data.lastPlayer + 1) % this.players.length;
+    }
     this.resetDice();
   }
 
@@ -47,12 +50,14 @@ export class GameComponent implements OnInit {
     this.router.navigate(['/home']);
   }
 
-  resetDice() {
+  resetDice(reroll: boolean = false) {
     this.dice = Array(6).fill(0).map(() => this.randomDie());
-    this.bankedDice = [];
-    this.turnScore = 0;
+    if (!reroll) {
+      this.bankedDice = [];
+      this.turnScore = 0;
+      this.hasRolled = false;
+    }
     this.scoringOptions = [];
-    this.hasRolled = false;
     this.noScoreMessage = false;
     this.allDiceScoredMessage = false;
   }
@@ -60,8 +65,7 @@ export class GameComponent implements OnInit {
   rollDice() {
     if (
       this.rolling ||
-      (this.hasRolled && this.bankedDice.length === 0) ||
-      this.allDiceScoredMessage
+      (this.hasRolled && this.bankedDice.length === 0)
     ) return;
 
     this.rolling = true;
@@ -79,6 +83,7 @@ export class GameComponent implements OnInit {
 
       if (this.scoringOptions.length === 0) {
         this.noScoreMessage = true;
+        this.turnScore = 0;
       }
     }, 800);
   }
@@ -132,6 +137,7 @@ export class GameComponent implements OnInit {
 
     if (this.bankedDice.length === 6) {
       this.allDiceScoredMessage = true;
+      this.resetDice(true);
     }
   }
 
@@ -145,16 +151,21 @@ export class GameComponent implements OnInit {
       player: player.name,
       score: appliedScore,
       timestamp: new Date(),
-      dice: [...this.bankedDice]
+      // dice: [...this.bankedDice]
     };
+
+    this.scores[this.currentPlayerIndex] += appliedScore;
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
 
+    console.log(this.scores);
+
     updateDoc(gameRef, {
-      turns: arrayUnion(turnData)
+      scores: this.scores,
+      turns: arrayUnion(turnData),
+      lastPlayer: this.currentPlayerIndex
     });
 
-    this.scores[this.currentPlayerIndex] += appliedScore;
     this.turnScore = 0;
     this.bankedDice = [];
     this.hasRolled = false;
