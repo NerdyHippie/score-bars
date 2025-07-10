@@ -1,54 +1,62 @@
 <div class="game-header">
-  <span>Game ID: {{ gameId }}</span>
-  <button mat-button (click)="goHome()" class="home-button">Back to Home</button>
+  <div class="game-id">Game ID: {{ gameId }}</div>
+  <button mat-stroked-button color="primary" (click)="goHome()">Back to Home</button>
 </div>
 
-<div class="players">
-  <mat-chip-set>
+<div class="players-row">
+  <mat-chip-set class="player-chips" aria-label="Player Scores">
     <mat-chip
-      *ngFor="let player of players; index as i"
-      [class.current-player]="i === currentPlayerIndex"
+      *ngFor="let player of players; let i = index"
+      [ngClass]="{ 'active-player': i === currentPlayerIndex, 'inactive-player': i !== currentPlayerIndex }"
     >
       {{ player.name }} | {{ scores[i] }}
     </mat-chip>
   </mat-chip-set>
 </div>
 
-<div class="dice-container">
-  <img
-    *ngFor="let die of dice"
-    class="die-image"
-    [src]="'assets/images/die-' + die + '.svg'"
-    alt="die"
-  />
-</div>
-
-<div class="turn-controls">
-  <span class="turn-score">Current Turn: {{ turnScore }}</span>
-  <button mat-raised-button color="primary" (click)="rollDice()" [disabled]="rolling || (hasRolled && bankedDice.length === 0)">
+<div class="dice-section">
+  <button
+    mat-stroked-button
+    color="primary"
+    class="roll-button"
+    [disabled]="rolling || (hasRolled && bankedDice.length === 0)"
+    (click)="rollDice()"
+  >
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
-  <button mat-raised-button color="accent" (click)="endTurn()">End Turn</button>
+
+  <div class="dice-row">
+    <img
+      *ngFor="let die of dice"
+      class="dice-img"
+      [src]="'assets/images/die-' + die + '.svg'"
+      alt="Die"
+    />
+  </div>
+</div>
+
+<div class="turn-actions">
+  <div class="turn-score">Turn Score: {{ turnScore }}</div>
+  <button mat-stroked-button color="accent" (click)="endTurn()">End Turn</button>
 </div>
 
 <div class="score-options">
-  <ng-container *ngIf="scoringOptions.length > 0">
-    <div class="scoring-list">
-      <div
-        *ngFor="let option of scoringOptions"
-        class="scoring-option"
+  <div *ngIf="noScoreMessage" class="no-score-msg">
+    No dice have scored.
+  </div>
+  <div *ngIf="allDiceScoredMessage && !noScoreMessage" class="all-scored-msg">
+    All dice scored. You may roll again.
+  </div>
+
+  <div class="score-option-list" *ngIf="scoreOptions.length > 0">
+    <mat-chip-set>
+      <mat-chip
+        *ngFor="let option of scoreOptions"
+        class="score-chip"
         (click)="bank(option)"
       >
         {{ option.label }} ({{ option.score }})
-      </div>
-    </div>
-  </ng-container>
-
-  <div class="message" *ngIf="noScoreMessage">
-    No dice have scored. You must end your turn.
-  </div>
-
-  <div class="message" *ngIf="allDiceScoredMessage">
-    All dice scored. You may roll again.
+      </mat-chip>
+    </mat-chip-set>
   </div>
 </div>

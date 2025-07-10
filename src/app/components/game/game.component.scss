@@ -2,66 +2,72 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 16px;
 }
 
-.players {
+.players-row {
   display: flex;
   justify-content: center;
-  margin: 1rem 0;
+  margin: 16px 0;
 
-  mat-chip-set {
+  .player-chips {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
+    gap: 8px;
 
-  mat-chip {
-    font-weight: bold;
-    border: 1px solid #ccc;
-    background-color: #333;
-    color: #fff;
-    transition: background-color 0.3s ease;
+    .mat-chip {
+      border: 1px solid #ddd;
+      font-weight: bold;
+    }
 
-    &.current-player {
-      background-color: #d4e7c5; // Light sage
-      // Override Angular Material's deep label styling
-      ::ng-deep .mdc-evolution-chip__text-label {
-        color: #111 !important; // Dark font for readability
-      }
+    .active-player {
+      background-color: #e6f2e6;
+      color: #222;
+    }
+
+    .inactive-player {
+      background-color: #333;
+      color: #fff;
     }
   }
 }
 
-.dice-container {
+.dice-section {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
+  flex-direction: column;
+  align-items: center;
 
-  .die-image {
-    width: 60px;
-    height: 60px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  .roll-button {
+    margin-bottom: 16px;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    font-weight: bold;
+  }
+
+  .dice-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+
+    .dice-img {
+      width: 64px;
+      height: 64px;
+      opacity: 0.9;
+    }
   }
 }
 
-.turn-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+.turn-actions {
+  margin: 24px auto;
+  text-align: center;
 
   .turn-score {
-    font-weight: bold;
-    color: white;
+    font-size: 18px;
+    margin-bottom: 12px;
   }
 
   button {
     border: 1px solid #ccc;
-    background-color: #f5f5f5 !important;
-    color: #000;
+    font-weight: bold;
   }
 }
 
@@ -69,33 +75,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 24px;
 
-  .scoring-list {
+  .no-score-msg,
+  .all-scored-msg {
+    font-size: 16px;
+    color: #c33;
+    margin-bottom: 12px;
+  }
+
+  .score-option-list {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.5rem;
-  }
+    gap: 8px;
 
-  .scoring-option {
-    background-color: #222;
-    color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-
-    &:hover {
+    .score-chip {
       background-color: #444;
+      color: #fff;
+      border: 1px solid #ccc;
+      cursor: pointer;
     }
-  }
-
-  .message {
-    margin-top: 1rem;
-    color: #ff5252;
-    font-weight: bold;
   }
 }
