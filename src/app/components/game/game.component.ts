@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule]
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule],
 })
 export class GameComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -29,7 +29,7 @@ export class GameComponent implements OnInit {
   hasRolled = false;
 
   turnScore = 0;
-  scoringOptions: { label: string, score: number, dice: number[] }[] = [];
+  scoringOptions: { label: string; score: number; dice: number[] }[] = [];
   bankedDice: number[] = [];
 
   async ngOnInit() {
@@ -54,11 +54,11 @@ export class GameComponent implements OnInit {
   }
 
   rollDice() {
-    if (this.rolling) return;
+    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0)) return;
+
     this.rolling = true;
     this.hasRolled = true;
 
-    // Animate dice visually only
     const diceToRoll = 6 - this.bankedDice.length;
     const newRoll = Array(diceToRoll).fill(0).map(() => this.randomDie());
 
@@ -66,6 +66,11 @@ export class GameComponent implements OnInit {
       this.dice = newRoll;
       this.rolling = false;
       this.calculateScoringOptions();
+
+      if (this.scoringOptions.length === 0) {
+        this.turnScore = 0;
+        this.endTurn();
+      }
     }, 800);
   }
 
@@ -76,10 +81,9 @@ export class GameComponent implements OnInit {
   calculateScoringOptions() {
     this.scoringOptions = [];
     const counts = Array(7).fill(0);
-    this.dice.forEach(d => counts[d]++);
+    this.dice.forEach((d) => counts[d]++);
 
-    // Straight
-    if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every(n => this.dice.includes(n))) {
+    if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every((n) => this.dice.includes(n))) {
       this.scoringOptions.push({ label: '1-6 Straight', score: 5000, dice: [...this.dice] });
     }
 
@@ -99,16 +103,16 @@ export class GameComponent implements OnInit {
     }
   }
 
-  bank(option: { label: string, score: number, dice: number[] }) {
+  bank(option: { label: string; score: number; dice: number[] }) {
     this.turnScore += option.score;
-    option.dice.forEach(val => {
+    option.dice.forEach((val) => {
       const index = this.dice.indexOf(val);
       if (index > -1) this.dice.splice(index, 1);
       this.bankedDice.push(val);
     });
+
     this.calculateScoringOptions();
 
-    // All 6 banked? Reset roll opportunity
     if (this.bankedDice.length === 6) {
       this.dice = Array(6).fill(0).map(() => this.randomDie());
       this.bankedDice = [];
@@ -117,6 +121,17 @@ export class GameComponent implements OnInit {
   }
 
   endTurn() {
+    const player = this.players[this.currentPlayerIndex];
+    const turnData = {
+      player: player.name,
+      score: this.turnScore,
+      timestamp: new Date(),
+      dice: [...this.bankedDice],
+    };
+
+    const gameRef = doc(this.firestore, `games/${this.gameId}`);
+    updateDoc(gameRef, { turns: arrayUnion(turnData) });
+
     this.scores[this.currentPlayerIndex] += this.turnScore;
     this.turnScore = 0;
     this.bankedDice = [];

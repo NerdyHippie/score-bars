@@ -1,40 +1,44 @@
 <div class="game-header">
-  <div>
-    <strong>Game ID:</strong> {{ gameId }}
-  </div>
-  <button mat-button color="accent" (click)="goHome()">Back to Home</button>
+  <div class="game-id">Game ID: {{ gameId }}</div>
+  <button mat-button color="warn" (click)="goHome()">Back to Home</button>
 </div>
 
-<div class="players">
-  <mat-chip-set>
-    <mat-chip *ngFor="let player of players; let i = index" [ngClass]="{ 'active-player': i === currentPlayerIndex }">
+<div class="players-container">
+  <mat-chip-set class="player-chips">
+    <mat-chip *ngFor="let player of players; let i = index"
+              [ngClass]="{ 'active-chip': i === currentPlayerIndex }">
       {{ player.name }} | {{ scores[i] }}
     </mat-chip>
   </mat-chip-set>
 </div>
 
-<div class="roll-section">
-  <button mat-raised-button color="primary" (click)="rollDice()" [disabled]="rolling || dice.length === 0">
+<div class="dice-container">
+  <button mat-raised-button color="primary"
+          [disabled]="rolling || (hasRolled && bankedDice.length === 0)"
+          (click)="rollDice()">
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
-</div>
 
-<div class="dice-row">
-  <img *ngFor="let die of dice" [src]="'assets/images/die-' + die + '.svg'" class="die" />
-</div>
-
-<div class="turn-controls" *ngIf="!rolling">
-  <p>Turn Score: {{ turnScore }}</p>
-  <div>
-    <button mat-button color="warn" (click)="endTurn()">End Turn</button>
+  <div class="dice-row">
+    <img *ngFor="let die of dice"
+         [src]="'assets/images/die-' + die + '.svg'"
+         alt="Die"
+         class="die-image" />
   </div>
 </div>
 
-<div class="scoring-options" *ngIf="scoringOptions.length">
-  <p><strong>Select a scoring combination to bank:</strong></p>
-  <mat-chip-set>
-    <mat-chip *ngFor="let option of scoringOptions" (click)="bank(option)">
+<div class="turn-row" *ngIf="hasRolled">
+  <span class="turn-score">Current Turn Score: {{ turnScore }}</span>
+  <button mat-stroked-button color="accent" (click)="endTurn()">End Turn</button>
+</div>
+
+<div class="scoring-options-container" *ngIf="scoringOptions.length">
+  <h3>Available Scores:</h3>
+  <div class="scoring-options">
+    <button mat-stroked-button
+            *ngFor="let option of scoringOptions"
+            (click)="bank(option)">
       {{ option.label }} (+{{ option.score }})
-    </mat-chip>
-  </mat-chip-set>
+    </button>
+  </div>
 </div>

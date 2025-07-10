@@ -2,45 +2,80 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 
-.players {
-  margin-bottom: 20px;
+.players-container {
   display: flex;
   justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.roll-section {
+.player-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+mat-chip {
+  font-weight: 500;
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.active-chip {
+  background-color: #ffd740 !important;
+  color: #000 !important;
+}
+
+.dice-container {
   text-align: center;
-  margin-bottom: 20px;
+
+  .dice-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .die-image {
+    width: 64px;
+    height: 64px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+  }
 }
 
-.dice-row {
+.turn-row {
+  margin-top: 1.5rem;
+  text-align: center;
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 2rem;
+  align-items: center;
+
+  .turn-score {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
 }
 
-.die {
-  width: 60px;
-  height: 60px;
-  filter: grayscale(1);
-  transition: transform 0.2s ease;
-}
-
-.turn-controls {
+.scoring-options-container {
+  margin-top: 2rem;
   text-align: center;
-  margin-bottom: 20px;
-}
 
-.scoring-options {
-  text-align: center;
-  margin-top: 10px;
-}
+  h3 {
+    margin-bottom: 0.5rem;
+  }
 
-.active-player {
-  background-color: #ffcc80 !important;
-  color: black;
+  .scoring-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  button {
+    min-width: 150px;
+  }
 }
