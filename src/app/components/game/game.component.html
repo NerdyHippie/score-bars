@@ -1,24 +1,40 @@
-<mat-card>
-  <div class="game-header">
-    <div>Game ID: {{ gameId }}</div>
-    <button mat-button color="accent" (click)="goHome()">Back to Home</button>
+<div class="game-header">
+  <div>
+    <strong>Game ID:</strong> {{ gameId }}
   </div>
+  <button mat-button color="accent" (click)="goHome()">Back to Home</button>
+</div>
 
-  <div class="players">
-    <mat-chip-set>
-      <mat-chip
-        *ngFor="let player of players; let i = index"
-        [color]="i === currentPlayerIndex ? 'primary' : ''"
-      >
-        {{ player.name }} | {{ scores[i] || 0 }}
-      </mat-chip>
-    </mat-chip-set>
-  </div>
+<div class="players">
+  <mat-chip-set>
+    <mat-chip *ngFor="let player of players; let i = index" [ngClass]="{ 'active-player': i === currentPlayerIndex }">
+      {{ player.name }} | {{ scores[i] }}
+    </mat-chip>
+  </mat-chip-set>
+</div>
 
-  <div class="roll-section">
-    <button mat-raised-button color="primary" (click)="rollDice()" [disabled]="rolling">Roll</button>
-    <div class="dice-row">
-      <img *ngFor="let die of dice" [src]="'assets/images/die-' + die + '.svg'" alt="Die face {{ die }}" class="die" [class.rolling]="rolling" />
-    </div>
+<div class="roll-section">
+  <button mat-raised-button color="primary" (click)="rollDice()" [disabled]="rolling || dice.length === 0">
+    {{ hasRolled ? 'Roll Again' : 'Roll' }}
+  </button>
+</div>
+
+<div class="dice-row">
+  <img *ngFor="let die of dice" [src]="'assets/images/die-' + die + '.svg'" class="die" />
+</div>
+
+<div class="turn-controls" *ngIf="!rolling">
+  <p>Turn Score: {{ turnScore }}</p>
+  <div>
+    <button mat-button color="warn" (click)="endTurn()">End Turn</button>
   </div>
-</mat-card>
+</div>
+
+<div class="scoring-options" *ngIf="scoringOptions.length">
+  <p><strong>Select a scoring combination to bank:</strong></p>
+  <mat-chip-set>
+    <mat-chip *ngFor="let option of scoringOptions" (click)="bank(option)">
+      {{ option.label }} (+{{ option.score }})
+    </mat-chip>
+  </mat-chip-set>
+</div>

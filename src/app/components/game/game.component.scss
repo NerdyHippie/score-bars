@@ -13,18 +13,14 @@
 
 .roll-section {
   text-align: center;
-}
-
-.roll-section button {
-  background-color: #ffcc80; /* Light orange to stand out against dark background */
-  color: #000;
+  margin-bottom: 20px;
 }
 
 .dice-row {
-  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 10px;
+  margin-bottom: 20px;
 }
 
 .die {
@@ -34,7 +30,17 @@
   transition: transform 0.2s ease;
 }
 
-.die.rolling {
-  transform: scale(1.2) rotate(20deg);
-  filter: none;
+.turn-controls {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.scoring-options {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.active-player {
+  background-color: #ffcc80 !important;
+  color: black;
 }
