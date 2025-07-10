@@ -56,18 +56,37 @@ export class GameComponent implements OnInit {
   }
 
   calculateScore(dice: number[]): number {
+
+    console.log(`dice: ${dice}`);
     const counts: { [key: number]: number } = {};
     for (const die of dice) {
       counts[die] = (counts[die] || 0) + 1;
     }
 
+    const isStraight = [1, 2, 3, 4, 5, 6].every(n => counts[n] === 1);
+    if (isStraight) return 5000;
+
+    let score = 0;
+
     for (const num in counts) {
       const value = parseInt(num);
-      if (counts[value] >= 3) {
-        return value === 1 ? 1000 : value * 100;
+      const count = counts[value];
+
+      if (count === 6) {
+        score += value === 1 ? 4000 : 3500;
+      } else if (count === 5) {
+        score += value === 1 ? 3000 : 2500;
+      } else if (count === 4) {
+        score += value === 1 ? 2000 : 1500;
+      } else if (count === 3) {
+        score += value === 1 ? 1000 : value * 100;
+      } else if (value === 1 || value === 5) {
+        const individualValue = value === 1 ? 100 : 50;
+        const remainder = count % 3;
+        score += individualValue * remainder;
       }
     }
 
-    return 0;
+    return score;
   }
 }
