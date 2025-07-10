@@ -1,9 +1,12 @@
-<div class="home-header">
-  <h1>Active Games</h1>
-  <button mat-raised-button color="primary" (click)="openNewGameDialog()">New Game</button>
-</div>
-
-<!-- Placeholder for active games -->
-<ul>
-  <li>No active games yet.</li>
-</ul>
+<mat-card>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>Active Games:</h2>
+    <button mat-raised-button color="primary" (click)="startNewGame()">New Game</button>
+  </div>
+  <mat-list>
+    <mat-list-item *ngFor="let game of games$ | async" (click)="goToGame(game.id)">
+      <div mat-line>Game ID: {{ game.id }}</div>
+      <div mat-line>Players: {{ getPlayerNames(game) }}</div>
+    </mat-list-item>
+  </mat-list>
+</mat-card>
