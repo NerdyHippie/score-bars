@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule]
 })
 export class GameComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -29,8 +29,10 @@ export class GameComponent implements OnInit {
   hasRolled = false;
 
   turnScore = 0;
-  scoringOptions: { label: string; score: number; dice: number[] }[] = [];
+  scoringOptions: { label: string, score: number, dice: number[] }[] = [];
   bankedDice: number[] = [];
+  noScoreMessage = false;
+  allDiceScoredMessage = false;
 
   async ngOnInit() {
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -51,13 +53,21 @@ export class GameComponent implements OnInit {
     this.turnScore = 0;
     this.scoringOptions = [];
     this.hasRolled = false;
+    this.noScoreMessage = false;
+    this.allDiceScoredMessage = false;
   }
 
   rollDice() {
-    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0)) return;
+    if (
+      this.rolling ||
+      (this.hasRolled && this.bankedDice.length === 0) ||
+      this.allDiceScoredMessage
+    ) return;
 
     this.rolling = true;
     this.hasRolled = true;
+    this.noScoreMessage = false;
+    this.allDiceScoredMessage = false;
 
     const diceToRoll = 6 - this.bankedDice.length;
     const newRoll = Array(diceToRoll).fill(0).map(() => this.randomDie());
@@ -68,8 +78,7 @@ export class GameComponent implements OnInit {
       this.calculateScoringOptions();
 
       if (this.scoringOptions.length === 0) {
-        this.turnScore = 0;
-        this.endTurn();
+        this.noScoreMessage = true;
       }
     }, 800);
   }
@@ -81,10 +90,19 @@ export class GameComponent implements OnInit {
   calculateScoringOptions() {
     this.scoringOptions = [];
     const counts = Array(7).fill(0);
-    this.dice.forEach((d) => counts[d]++);
+    this.dice.forEach(d => counts[d]++);
 
-    if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every((n) => this.dice.includes(n))) {
+    // 3 Pairs
+    const pairCount = counts.filter(c => c === 2).length;
+    if (this.dice.length === 6 && pairCount === 3) {
+      this.scoringOptions.push({ label: '3 Pairs', score: 1250, dice: [...this.dice] });
+      return;
+    }
+
+    // Straight
+    if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every(n => this.dice.includes(n))) {
       this.scoringOptions.push({ label: '1-6 Straight', score: 5000, dice: [...this.dice] });
+      return;
     }
 
     for (let i = 1; i <= 6; i++) {
@@ -103,36 +121,40 @@ export class GameComponent implements OnInit {
     }
   }
 
-  bank(option: { label: string; score: number; dice: number[] }) {
+  bank(option: { label: string, score: number, dice: number[] }) {
     this.turnScore += option.score;
-    option.dice.forEach((val) => {
+    option.dice.forEach(val => {
       const index = this.dice.indexOf(val);
       if (index > -1) this.dice.splice(index, 1);
       this.bankedDice.push(val);
     });
-
     this.calculateScoringOptions();
 
     if (this.bankedDice.length === 6) {
-      this.dice = Array(6).fill(0).map(() => this.randomDie());
-      this.bankedDice = [];
-      this.calculateScoringOptions();
+      this.allDiceScoredMessage = true;
     }
   }
 
   endTurn() {
     const player = this.players[this.currentPlayerIndex];
+
+    const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= 500;
+    const appliedScore = shouldScore ? this.turnScore : 0;
+
     const turnData = {
       player: player.name,
-      score: this.turnScore,
+      score: appliedScore,
       timestamp: new Date(),
-      dice: [...this.bankedDice],
+      dice: [...this.bankedDice]
     };
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
-    updateDoc(gameRef, { turns: arrayUnion(turnData) });
 
-    this.scores[this.currentPlayerIndex] += this.turnScore;
+    updateDoc(gameRef, {
+      turns: arrayUnion(turnData)
+    });
+
+    this.scores[this.currentPlayerIndex] += appliedScore;
     this.turnScore = 0;
     this.bankedDice = [];
     this.hasRolled = false;
