@@ -9,7 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [ CommonModule, MatButtonModule, MatChipsModule, MatCardModule ],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, MatCardModule],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss']
 })
@@ -50,6 +50,24 @@ export class GameComponent implements OnInit {
       clearInterval(interval);
       this.dice = this.dice.map(() => Math.floor(Math.random() * 6) + 1);
       this.rolling = false;
+      const score = this.calculateScore(this.dice);
+      this.scores[this.currentPlayerIndex] += score;
     }, rollDuration);
+  }
+
+  calculateScore(dice: number[]): number {
+    const counts: { [key: number]: number } = {};
+    for (const die of dice) {
+      counts[die] = (counts[die] || 0) + 1;
+    }
+
+    for (const num in counts) {
+      const value = parseInt(num);
+      if (counts[value] >= 3) {
+        return value === 1 ? 1000 : value * 100;
+      }
+    }
+
+    return 0;
   }
 }
