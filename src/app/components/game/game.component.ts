@@ -142,7 +142,7 @@ export class GameComponent implements OnInit {
     }
   }
 
-  endTurn() {
+  async endTurn() {
     const player = this.players[this.currentPlayerIndex];
     const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= 500;
     const appliedScore = shouldScore ? this.turnScore : 0;
@@ -156,13 +156,12 @@ export class GameComponent implements OnInit {
     };
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
-    updateDoc(gameRef, {
+    const updatePayload: any = {
       scores: this.scores,
       turns: arrayUnion(turnData),
       lastPlayer: this.currentPlayerIndex
-    });
+    };
 
-    // Check for game end logic
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
@@ -174,13 +173,18 @@ export class GameComponent implements OnInit {
         }
       });
 
-      if (this.players.filter((_, i) => !this.eliminatedPlayers.has(i)).length === 1) {
+      const remaining = this.players.filter((_, i) => !this.eliminatedPlayers.has(i));
+      if (remaining.length === 1) {
         this.gameOver = true;
         const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
         this.winnerName = this.players[winnerIndex].name;
-        return;
+        updatePayload.gameIsFinished = true;
       }
     }
+
+    await updateDoc(gameRef, updatePayload);
+
+    if (this.gameOver) return;
 
     this.turnScore = 0;
     this.bankedDice = [];

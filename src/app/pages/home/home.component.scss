@@ -1,6 +1,60 @@
 .home-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.games-section {
+  max-width: 700px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.25rem;
+  }
+
+  .game-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f2f4f7;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #e6e9ec;
+    }
+
+    &.finished {
+      background-color: #e0e0e0;
+      font-style: italic;
+    }
+
+    .game-content {
+      display: flex;
+      flex-direction: column;
+
+      .players {
+        font-weight: 600;
+        color: #222;
+      }
+
+      .timestamp {
+        font-style: italic;
+        font-size: 0.85rem;
+        color: #555;
+      }
+    }
+
+    .delete-btn {
+      margin-left: 1rem;
+    }
+  }
 }

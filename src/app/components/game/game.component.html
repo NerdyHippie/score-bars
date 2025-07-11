@@ -8,6 +8,7 @@
     <mat-chip
       *ngFor="let player of players; index as i"
       [class.current-player]="i === currentPlayerIndex"
+      [class.eliminated-player]="eliminatedPlayers.has(i)"
     >
       {{ player.name }} | {{ scores[i] }}
     </mat-chip>
@@ -16,23 +17,18 @@
 
 <div class="dice-container">
   <ng-container *ngFor="let die of dice">
-    <ng-container *ngIf="die === 0; else rolledDie">
-      <svg
+    <ng-container *ngIf="die === 0; else realDie">
+      <img
         class="die-image"
-        width="60"
-        height="60"
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect width="100" height="100" rx="15" fill="white" stroke="black" stroke-width="4"/>
-        <text x="50" y="60" text-anchor="middle" font-size="24" font-weight="bold" fill="black" font-family="Arial">READY</text>
-      </svg>
+        src="assets/images/die-ready.svg"
+        alt="Ready die"
+      />
     </ng-container>
-    <ng-template #rolledDie>
+    <ng-template #realDie>
       <img
         class="die-image"
         [src]="'assets/images/die-' + die + '.svg'"
-        alt="die"
+        alt="Die showing ' + die"
       />
     </ng-template>
   </ng-container>
@@ -40,7 +36,12 @@
 
 <div class="turn-controls">
   <span class="turn-score">Current Turn: {{ turnScore }}</span>
-  <button mat-raised-button color="primary" (click)="rollDice()" [disabled]="rolling || (hasRolled && bankedDice.length === 0)">
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="rollDice()"
+    [disabled]="rolling || (hasRolled && bankedDice.length === 0)"
+  >
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
   <button mat-raised-button color="accent" (click)="endTurn()">End Turn</button>
@@ -59,19 +60,19 @@
     </div>
   </ng-container>
 
-  <div class="message" *ngIf="noScoreMessage">
+  <div class="message warning" *ngIf="noScoreMessage">
     No dice have scored. You must end your turn.
   </div>
 
-  <div class="message" *ngIf="allDiceScoredMessage">
+  <div class="message success" *ngIf="allDiceScoredMessage">
     All dice scored. You may roll again.
   </div>
 
-  <div class="message" *ngIf="finalRound && currentPlayerIndex === finalRoundStarterIndex">
-    Final round has started! All other players will get one last chance.
+  <div class="message info" *ngIf="finalRound && !gameOver">
+    Final round! All players have one last chance to beat the top score.
   </div>
 
-  <div class="message" *ngIf="gameOver">
-    Game Over! {{ winnerName }} wins!
+  <div class="message success" *ngIf="gameOver">
+    {{ winnerName }} wins the game!
   </div>
 </div>

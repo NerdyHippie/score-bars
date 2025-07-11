@@ -30,6 +30,15 @@
         color: #111 !important;
       }
     }
+
+    &.eliminated-player {
+      background-color: #888;
+      text-decoration: line-through;
+
+      ::ng-deep .mdc-evolution-chip__text-label {
+        color: #eee !important;
+      }
+    }
   }
 }
 
@@ -95,7 +104,18 @@
 
   .message {
     margin-top: 1rem;
-    color: #ff5252;
     font-weight: bold;
+
+    &.success {
+      color: #4caf50; // Material green
+    }
+
+    &.warning {
+      color: #ff5252; // Material red
+    }
+
+    &.info {
+      color: #2196f3; // Material blue
+    }
   }
 }

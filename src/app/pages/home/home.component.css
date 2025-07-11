@@ -1,8 +1,54 @@
 .home-header {
   display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.games-section {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.games-section h2 {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  color: #333;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.25rem;
+}
+.games-section .game-card {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  background-color: #f2f4f7;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.games-section .game-card:hover {
+  background-color: #e6e9ec;
+}
+.games-section .game-card.finished {
+  background-color: #e0e0e0;
+  font-style: italic;
+}
+.games-section .game-card .game-content {
+  display: flex;
+  flex-direction: column;
+}
+.games-section .game-card .game-content .players {
+  font-weight: 600;
+  color: #222;
+}
+.games-section .game-card .game-content .timestamp {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #555;
+}
+.games-section .game-card .delete-btn {
+  margin-left: 1rem;
 }
 
 /*# sourceMappingURL=home.component.css.map */
