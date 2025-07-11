@@ -62,7 +62,7 @@ export class GameComponent implements OnInit {
 
   resetDice(reroll: boolean = false) {
     if (reroll) {
-      this.dice = Array(6).fill(0).map(() => this.randomDie());
+      this.dice = Array(6).fill(0);
     } else {
       this.setReadyDice();
     }
