@@ -15,12 +15,27 @@
 </div>
 
 <div class="dice-container">
-  <img
-    *ngFor="let die of dice"
-    class="die-image"
-    [src]="'assets/images/die-' + die + '.svg'"
-    alt="die"
-  />
+  <ng-container *ngFor="let die of dice">
+    <ng-container *ngIf="die === 0; else rolledDie">
+      <svg
+        class="die-image"
+        width="60"
+        height="60"
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="100" height="100" rx="15" fill="white" stroke="black" stroke-width="4"/>
+        <text x="50" y="55" text-anchor="middle" font-size="16" fill="black" font-family="Arial">READY</text>
+      </svg>
+    </ng-container>
+    <ng-template #rolledDie>
+      <img
+        class="die-image"
+        [src]="'assets/images/die-' + die + '.svg'"
+        alt="die"
+      />
+    </ng-template>
+  </ng-container>
 </div>
 
 <div class="turn-controls">

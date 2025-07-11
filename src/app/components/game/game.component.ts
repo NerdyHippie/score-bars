@@ -1,4 +1,3 @@
-// src/app/components/game/game.component.ts
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
@@ -44,23 +43,29 @@ export class GameComponent implements OnInit {
     if (typeof data.lastPlayer === 'number') {
       this.currentPlayerIndex = (data.lastPlayer + 1) % this.players.length;
     }
-    this.resetDice();
+    this.setReadyDice();
   }
 
   goHome() {
     this.router.navigate(['/home']);
   }
 
-  resetDice(reroll: boolean = false) {
-    this.dice = Array(6).fill(0).map(() => this.randomDie());
-    if (!reroll) {
-      this.bankedDice = [];
-      this.turnScore = 0;
-      this.hasRolled = false;
-    }
+  setReadyDice() {
+    this.dice = Array(6).fill(0); // 0 means "ready" state
+    this.bankedDice = [];
+    this.turnScore = 0;
+    this.hasRolled = false;
     this.scoringOptions = [];
     this.noScoreMessage = false;
     this.allDiceScoredMessage = false;
+  }
+
+  resetDice(reroll: boolean = false) {
+    if (reroll) {
+      this.dice = Array(6).fill(0).map(() => this.randomDie());
+    } else {
+      this.setReadyDice();
+    }
   }
 
   rollDice() {
@@ -98,14 +103,12 @@ export class GameComponent implements OnInit {
     const counts = Array(7).fill(0);
     this.dice.forEach(d => counts[d]++);
 
-    // 3 Pairs
     const pairCount = counts.filter(c => c === 2).length;
     if (this.dice.length === 6 && pairCount === 3) {
       this.scoringOptions.push({ label: '3 Pairs', score: 1250, dice: [...this.dice] });
       return;
     }
 
-    // Straight
     if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every(n => this.dice.includes(n))) {
       this.scoringOptions.push({ label: '1-6 Straight', score: 5000, dice: [...this.dice] });
       return;
@@ -166,6 +169,6 @@ export class GameComponent implements OnInit {
     this.bankedDice = [];
     this.hasRolled = false;
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-    this.resetDice();
+    this.setReadyDice();
   }
 }
