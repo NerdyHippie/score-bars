@@ -7,18 +7,23 @@ import { MatChipsModule } from '@angular/material/chips';
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrettyJsonPipe } from '../../pipes/pretty-json-pipe';
+import { DiceService } from '../../services/dice.service';
+import { ScoringService } from '../../services/scoring.service';
 
 @Component({
   selector: 'app-game',
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe ]
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe],
+  providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
+  private diceService = inject(DiceService);
+  private scoringService = inject(ScoringService);
 
   gameId: string = '';
   players: { name: string }[] = [];
@@ -63,8 +68,7 @@ export class GameComponent implements OnInit {
       scores: this.scores,
       turnScore: this.turnScore,
       allDiceScoredMessage: this.allDiceScoredMessage,
-    }
-
+    };
     return JSON.stringify(debugData);
   }
 
@@ -73,7 +77,7 @@ export class GameComponent implements OnInit {
   }
 
   resetDice(reroll: boolean = false) {
-    this.dice = reroll ? Array(6).fill(0).map(() => this.randomDie()) : Array(6).fill(0);
+    this.dice = reroll ? this.diceService.rollAllDice() : this.diceService.getReadyDice();
     this.bankedDice = [];
     if (!reroll) {
       this.turnScore = 0;
@@ -92,8 +96,8 @@ export class GameComponent implements OnInit {
     this.noScoreMessage = false;
     this.allDiceScoredMessage = false;
 
-    const diceToRoll = 6 - this.bankedDice.length;
-    const newRoll = Array(diceToRoll).fill(0).map(() => this.randomDie());
+    const diceToRoll = this.allDiceScoredMessage ? 6 : 6 - this.bankedDice.length;
+    const newRoll = this.diceService.rollDice(diceToRoll);
 
     setTimeout(() => {
       this.dice = newRoll;
@@ -107,40 +111,8 @@ export class GameComponent implements OnInit {
     }, 800);
   }
 
-  randomDie(): number {
-    return Math.floor(Math.random() * 6) + 1;
-  }
-
   calculateScoringOptions() {
-    this.scoringOptions = [];
-    const counts = Array(7).fill(0);
-    this.dice.forEach(d => counts[d]++);
-
-    const pairCount = counts.filter(c => c === 2).length;
-    if (this.dice.length === 6 && pairCount === 3) {
-      this.scoringOptions.push({ label: '3 Pairs', score: 1250, dice: [...this.dice] });
-      return;
-    }
-
-    if (this.dice.length === 6 && [1, 2, 3, 4, 5, 6].every(n => this.dice.includes(n))) {
-      this.scoringOptions.push({ label: '1-6 Straight', score: 5000, dice: [...this.dice] });
-      return;
-    }
-
-    for (let i = 1; i <= 6; i++) {
-      if (counts[i] >= 3) {
-        let score = i === 1 ? 1000 : i * 100;
-        if (counts[i] === 4) score = i === 1 ? 2000 : 1500;
-        if (counts[i] === 5) score = i === 1 ? 3000 : 2500;
-        if (counts[i] === 6) score = i === 1 ? 4000 : 3500;
-        this.scoringOptions.push({ label: `${counts[i]} x ${i}'s`, score, dice: Array(counts[i]).fill(i) });
-      } else if (i === 1 || i === 5) {
-        for (let j = 0; j < counts[i]; j++) {
-          const score = i === 1 ? 100 : 50;
-          this.scoringOptions.push({ label: `${i}`, score, dice: [i] });
-        }
-      }
-    }
+    this.scoringOptions = this.scoringService.getScoringOptions(this.dice);
   }
 
   bank(option: { label: string, score: number, dice: number[] }) {
@@ -178,7 +150,6 @@ export class GameComponent implements OnInit {
       lastPlayer: this.currentPlayerIndex
     });
 
-    // Final round logic
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
@@ -195,7 +166,6 @@ export class GameComponent implements OnInit {
         const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
         this.winnerName = this.players[winnerIndex].name;
 
-        // Set gameIsFinished flag in Firestore
         await updateDoc(gameRef, { gameIsFinished: true });
         return;
       }
