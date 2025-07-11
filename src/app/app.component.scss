@@ -1,3 +1,19 @@
+.desktop-toolbar {
+  display: flex;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.mobile-toolbar {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
 .spacer {
   flex: 1 1 auto;
 }
@@ -6,8 +22,12 @@
   display: flex;
   justify-content: center;
   padding: 20px;
-  height: calc(100vh - 64px); /* 64px is default height of mat-toolbar */
+  height: calc(100vh - 64px); /* Adjust height for toolbar */
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    height: 100vh;
+  }
 }
 
 .main-card {

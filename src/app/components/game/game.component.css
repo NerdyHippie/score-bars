@@ -38,6 +38,7 @@
 
 .dice-container {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
   margin: 2rem 0;
@@ -46,6 +47,15 @@
   width: 60px;
   height: 60px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+@media (max-width: 600px) {
+  .dice-container {
+    gap: 0.5rem;
+  }
+  .dice-container .die-image {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 .turn-controls {
@@ -90,18 +100,19 @@
 .score-options .scoring-option:hover {
   background-color: #444;
 }
-.score-options .message {
+
+.message {
   margin-top: 1rem;
   font-weight: bold;
 }
-.score-options .message.success {
-  color: #4caf50;
-}
-.score-options .message.warning {
+.message.error {
   color: #ff5252;
 }
-.score-options .message.info {
-  color: #2196f3;
+.message.success {
+  color: #4caf50;
+}
+.message.final {
+  color: #03a9f4;
 }
 
 /*# sourceMappingURL=game.component.css.map */

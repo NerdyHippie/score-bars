@@ -16,22 +16,12 @@
 </div>
 
 <div class="dice-container">
-  <ng-container *ngFor="let die of dice">
-    <ng-container *ngIf="die === 0; else realDie">
-      <img
-        class="die-image"
-        src="assets/images/die-ready.svg"
-        alt="Ready die"
-      />
-    </ng-container>
-    <ng-template #realDie>
-      <img
-        class="die-image"
-        [src]="'assets/images/die-' + die + '.svg'"
-        alt="Die showing ' + die"
-      />
-    </ng-template>
-  </ng-container>
+  <img
+    *ngFor="let die of dice"
+    class="die-image"
+    [src]="die === 0 ? 'assets/images/die-ready.svg' : 'assets/images/die-' + die + '.svg'"
+    alt="die"
+  />
 </div>
 
 <div class="turn-controls">
@@ -60,7 +50,7 @@
     </div>
   </ng-container>
 
-  <div class="message warning" *ngIf="noScoreMessage">
+  <div class="message error" *ngIf="noScoreMessage">
     No dice have scored. You must end your turn.
   </div>
 
@@ -68,11 +58,11 @@
     All dice scored. You may roll again.
   </div>
 
-  <div class="message info" *ngIf="finalRound && !gameOver">
-    Final round! All players have one last chance to beat the top score.
+  <div class="message final" *ngIf="finalRound && !gameOver">
+    Final round has begun! Beat the top score or be eliminated.
   </div>
 
   <div class="message success" *ngIf="gameOver">
-    {{ winnerName }} wins the game!
+    Game over! {{ winnerName }} wins!
   </div>
 </div>

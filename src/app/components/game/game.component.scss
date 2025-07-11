@@ -44,6 +44,7 @@
 
 .dice-container {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
   margin: 2rem 0;
@@ -52,6 +53,15 @@
     width: 60px;
     height: 60px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  }
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
+
+    .die-image {
+      width: 50px;
+      height: 50px;
+    }
   }
 }
 
@@ -101,21 +111,21 @@
       background-color: #444;
     }
   }
+}
 
-  .message {
-    margin-top: 1rem;
-    font-weight: bold;
+.message {
+  margin-top: 1rem;
+  font-weight: bold;
 
-    &.success {
-      color: #4caf50; // Material green
-    }
+  &.error {
+    color: #ff5252; // Material red
+  }
 
-    &.warning {
-      color: #ff5252; // Material red
-    }
+  &.success {
+    color: #4caf50; // Material green
+  }
 
-    &.info {
-      color: #2196f3; // Material blue
-    }
+  &.final {
+    color: #03a9f4; // Material blue
   }
 }
