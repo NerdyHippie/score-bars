@@ -30,10 +30,10 @@
     mat-raised-button
     color="primary"
     (click)="rollDice()"
-    [disabled]="rolling || (hasRolled && bankedDice.length === 0)"
-  >
+    [disabled]="rolling || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
+
   <button mat-raised-button color="accent" (click)="endTurn()">End Turn</button>
 </div>
 
@@ -66,3 +66,6 @@
     Game over! {{ winnerName }} wins!
   </div>
 </div>
+
+<pre class="debug-container" [innerHTML]="getDebugData() | prettyjson: [false, 4]"></pre>
+

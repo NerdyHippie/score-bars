@@ -115,4 +115,10 @@
   color: #03a9f4;
 }
 
+.debug-container {
+  background-color: white;
+  padding: 40px;
+  display: none;
+}
+
 /*# sourceMappingURL=game.component.css.map */

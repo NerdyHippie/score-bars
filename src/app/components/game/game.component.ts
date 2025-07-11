@@ -6,13 +6,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PrettyJsonPipe } from '../../pipes/pretty-json-pipe';
 
 @Component({
   selector: 'app-game',
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule]
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe ]
 })
 export class GameComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -52,6 +53,21 @@ export class GameComponent implements OnInit {
     this.resetDice();
   }
 
+  getDebugData(): string {
+    const debugData = {
+      dice: this.dice,
+      bankedDice: this.bankedDice,
+      rolling: this.rolling,
+      hasRolled: this.hasRolled,
+      scoringOptions: this.scoringOptions,
+      scores: this.scores,
+      turnScore: this.turnScore,
+      allDiceScoredMessage: this.allDiceScoredMessage,
+    }
+
+    return JSON.stringify(debugData);
+  }
+
   goHome() {
     this.router.navigate(['/home']);
   }
@@ -62,14 +78,14 @@ export class GameComponent implements OnInit {
     if (!reroll) {
       this.turnScore = 0;
       this.hasRolled = false;
+      this.allDiceScoredMessage = false;
     }
     this.scoringOptions = [];
     this.noScoreMessage = false;
-    this.allDiceScoredMessage = false;
   }
 
   rollDice() {
-    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0)) return;
+    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0 && !this.allDiceScoredMessage)) return;
 
     this.rolling = true;
     this.hasRolled = true;
