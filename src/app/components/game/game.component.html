@@ -66,4 +66,12 @@
   <div class="message" *ngIf="allDiceScoredMessage">
     All dice scored. You may roll again.
   </div>
+
+  <div class="message" *ngIf="finalRound && currentPlayerIndex === finalRoundStarterIndex">
+    Final round has started! All other players will get one last chance.
+  </div>
+
+  <div class="message" *ngIf="gameOver">
+    Game Over! {{ winnerName }} wins!
+  </div>
 </div>
