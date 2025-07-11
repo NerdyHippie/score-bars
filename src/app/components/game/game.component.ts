@@ -1,3 +1,4 @@
+// src/app/components/game/game.component.ts
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
@@ -143,7 +144,6 @@ export class GameComponent implements OnInit {
 
   endTurn() {
     const player = this.players[this.currentPlayerIndex];
-
     const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= 500;
     const appliedScore = shouldScore ? this.turnScore : 0;
 
@@ -151,15 +151,11 @@ export class GameComponent implements OnInit {
       player: player.name,
       score: appliedScore,
       timestamp: new Date(),
-      // dice: [...this.bankedDice]
     };
 
     this.scores[this.currentPlayerIndex] += appliedScore;
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
-
-    console.log(this.scores);
-
     updateDoc(gameRef, {
       scores: this.scores,
       turns: arrayUnion(turnData),

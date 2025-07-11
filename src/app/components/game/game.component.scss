@@ -24,10 +24,10 @@
     transition: background-color 0.3s ease;
 
     &.current-player {
-      background-color: #d4e7c5; // Light sage
-      // Override Angular Material's deep label styling
+      background-color: #d4e7c5;
+
       ::ng-deep .mdc-evolution-chip__text-label {
-        color: #111 !important; // Dark font for readability
+        color: #111 !important;
       }
     }
   }
