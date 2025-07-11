@@ -58,8 +58,8 @@ export class GameComponent implements OnInit {
 
   resetDice(reroll: boolean = false) {
     this.dice = reroll ? Array(6).fill(0).map(() => this.randomDie()) : Array(6).fill(0);
+    this.bankedDice = [];
     if (!reroll) {
-      this.bankedDice = [];
       this.turnScore = 0;
       this.hasRolled = false;
     }
@@ -156,12 +156,13 @@ export class GameComponent implements OnInit {
     };
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
-    const updatePayload: any = {
+    await updateDoc(gameRef, {
       scores: this.scores,
       turns: arrayUnion(turnData),
       lastPlayer: this.currentPlayerIndex
-    };
+    });
 
+    // Final round logic
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
@@ -173,18 +174,16 @@ export class GameComponent implements OnInit {
         }
       });
 
-      const remaining = this.players.filter((_, i) => !this.eliminatedPlayers.has(i));
-      if (remaining.length === 1) {
+      if (this.players.filter((_, i) => !this.eliminatedPlayers.has(i)).length === 1) {
         this.gameOver = true;
         const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
         this.winnerName = this.players[winnerIndex].name;
-        updatePayload.gameIsFinished = true;
+
+        // Set gameIsFinished flag in Firestore
+        await updateDoc(gameRef, { gameIsFinished: true });
+        return;
       }
     }
-
-    await updateDoc(gameRef, updatePayload);
-
-    if (this.gameOver) return;
 
     this.turnScore = 0;
     this.bankedDice = [];
