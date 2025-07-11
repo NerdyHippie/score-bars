@@ -1,3 +1,5 @@
+
+
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
@@ -15,7 +17,7 @@ import { ScoringService } from '../../services/scoring.service';
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe ],
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit {
@@ -60,14 +62,14 @@ export class GameComponent implements OnInit {
 
   getDebugData(): string {
     const debugData = {
-      dice: this.dice,
-      bankedDice: this.bankedDice,
+      allDiceScoredMessage: this.allDiceScoredMessage,
       rolling: this.rolling,
       hasRolled: this.hasRolled,
+      turnScore: this.turnScore,
+      bankedDice: this.bankedDice,
       scoringOptions: this.scoringOptions,
       scores: this.scores,
-      turnScore: this.turnScore,
-      allDiceScoredMessage: this.allDiceScoredMessage,
+      dice: this.dice,
     };
     return JSON.stringify(debugData);
   }
@@ -77,45 +79,71 @@ export class GameComponent implements OnInit {
   }
 
   resetDice(reroll: boolean = false) {
-    this.dice = reroll ? this.diceService.rollAllDice() : this.diceService.getReadyDice();
-    this.bankedDice = [];
+    this.dice = this.diceService.getReadyDice();
     if (!reroll) {
+      this.bankedDice = [];
       this.turnScore = 0;
       this.hasRolled = false;
-      this.allDiceScoredMessage = false;
+      this.allDiceScoredMessage = false; // only clear when not rerolling
     }
     this.scoringOptions = [];
     this.noScoreMessage = false;
   }
 
   rollDice() {
-    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0 && !this.allDiceScoredMessage)) return;
+    console.log('[rollDice] START');
+    console.log('[rollDice] rolling:', this.rolling);
+    console.log('[rollDice] hasRolled:', this.hasRolled);
+    console.log('[rollDice] bankedDice:', this.bankedDice);
+    console.log('[rollDice] allDiceScoredMessage:', this.allDiceScoredMessage);
+    console.log('[rollDice] dice before roll:', this.dice);
 
+    if (this.rolling || (this.hasRolled && this.bankedDice.length === 0 && !this.allDiceScoredMessage)) {
+      console.log('[rollDice] Exit: conditions unmet for reroll');
+      return;
+    }
+
+    const diceToRoll = Math.max(0,
+      this.allDiceScoredMessage ? 6 :
+        this.dice.length === 0 ? 6 :
+          6 - this.bankedDice.length
+    );
+
+    console.log('[rollDice] diceToRoll:', diceToRoll);
+
+    const newRoll = this.diceService.rollDice(diceToRoll);
     this.rolling = true;
     this.hasRolled = true;
     this.noScoreMessage = false;
     this.allDiceScoredMessage = false;
-
-    const diceToRoll = this.allDiceScoredMessage ? 6 : 6 - this.bankedDice.length;
-    const newRoll = this.diceService.rollDice(diceToRoll);
 
     setTimeout(() => {
       this.dice = newRoll;
       this.rolling = false;
       this.calculateScoringOptions();
 
+      console.log('[rollDice] new dice:', this.dice);
+      console.log('[rollDice] scoringOptions:', this.scoringOptions);
+
       if (this.scoringOptions.length === 0) {
         this.noScoreMessage = true;
         this.turnScore = 0;
+        console.log('[rollDice] No scoring options, setting noScoreMessage to true');
       }
     }, 800);
   }
+
 
   calculateScoringOptions() {
     this.scoringOptions = this.scoringService.getScoringOptions(this.dice);
   }
 
   bank(option: { label: string, score: number, dice: number[] }) {
+    if (this.bankedDice.length + option.dice.length > 6) {
+      console.warn('[bank] Attempted to bank more than 6 dice');
+      return;
+    }
+
     this.turnScore += option.score;
     option.dice.forEach(val => {
       const index = this.dice.indexOf(val);
@@ -125,12 +153,14 @@ export class GameComponent implements OnInit {
     this.calculateScoringOptions();
 
     if (this.bankedDice.length === 6) {
-      this.allDiceScoredMessage = true;
-      this.resetDice(true);
+      this.resetDice(true);              // refresh dice
+      this.bankedDice = [];             // reset for fresh reroll
+      this.allDiceScoredMessage = true; // flag for next roll
     }
+
   }
 
-  async endTurn() {
+  endTurn() {
     const player = this.players[this.currentPlayerIndex];
     const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= 500;
     const appliedScore = shouldScore ? this.turnScore : 0;
@@ -144,12 +174,13 @@ export class GameComponent implements OnInit {
     };
 
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
-    await updateDoc(gameRef, {
+    const gameUpdate: any = {
       scores: this.scores,
       turns: arrayUnion(turnData),
       lastPlayer: this.currentPlayerIndex
-    });
+    };
 
+    // Check for game end logic
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
@@ -165,11 +196,11 @@ export class GameComponent implements OnInit {
         this.gameOver = true;
         const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
         this.winnerName = this.players[winnerIndex].name;
-
-        await updateDoc(gameRef, { gameIsFinished: true });
-        return;
+        gameUpdate.gameIsFinished = true;
       }
     }
+
+    updateDoc(gameRef, gameUpdate);
 
     this.turnScore = 0;
     this.bankedDice = [];

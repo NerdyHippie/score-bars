@@ -30,7 +30,7 @@
     mat-raised-button
     color="primary"
     (click)="rollDice()"
-    [disabled]="rolling || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
+    [disabled]="rolling || noScoreMessage || gameOver || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
 
