@@ -1,0 +1,28 @@
+<mat-dialog-content class="mat-typography">
+  <h2 mat-dialog-title>Start a New Game</h2>
+
+  <mat-form-field appearance="fill" class="w-full">
+    <mat-label>Your Name</mat-label>
+    <input matInput [(ngModel)]="playerName" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="w-full">
+    <mat-label>Game Mode</mat-label>
+    <mat-select [(ngModel)]="gameMode">
+      <mat-option value="local">Local Multiplayer</mat-option>
+      <mat-option value="solo">Solo Practice</mat-option>
+      <mat-option value="remote">Remote Multiplayer</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-hint *ngIf="gameMode === 'remote'">
+    You’ll be able to invite players after creating the game.
+  </mat-hint>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="startGame()" [disabled]="!playerName">
+    Start Game
+  </button>
+</mat-dialog-actions>

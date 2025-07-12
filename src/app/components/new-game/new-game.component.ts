@@ -14,7 +14,7 @@ interface Player {
   selector: 'app-new-game',
   standalone: true,
   templateUrl: './new-game.component.html',
-  styleUrls: ['./new-game.component.css'],
+  styleUrls: ['./new-game.component.scss'],
   imports: [CommonModule, FormsModule],
 })
 export class NewGameComponent implements OnInit {

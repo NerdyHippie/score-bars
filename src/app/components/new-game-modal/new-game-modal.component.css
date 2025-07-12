@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  padding: 1rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+}
+
+mat-dialog-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+button[mat-flat-button] {
+  font-weight: 600;
+}
+
+/*# sourceMappingURL=new-game-modal.component.css.map */

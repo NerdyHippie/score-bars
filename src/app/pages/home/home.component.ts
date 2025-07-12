@@ -8,7 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { NewGameModalComponent } from './new-game-modal.component';
+import { NewGameModalComponent } from '../../components/new-game-modal/new-game-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
 
