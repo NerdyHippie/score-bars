@@ -13,10 +13,13 @@ mat-form-field {
 mat-dialog-content {
   display: flex;
   flex-direction: column;
+  background-color: #ffffff;
 }
 
 mat-dialog-actions {
-  margin-top: 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  padding-top: 1rem;
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -24,6 +27,13 @@ mat-dialog-actions {
 
 button[mat-flat-button] {
   font-weight: 600;
+}
+
+::ng-deep .mat-dialog-container {
+  background-color: #ffffff;
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  border-radius: 8px;
+  padding: 1rem;
 }
 
 /*# sourceMappingURL=new-game-modal.component.css.map */

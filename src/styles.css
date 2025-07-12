@@ -17,4 +17,12 @@ body {
   margin-bottom: 0 !important;
 }
 
+mat-dialog-container .mat-mdc-dialog-surface {
+  background-color: #ffffff;
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow: hidden;
+}
+
 /*# sourceMappingURL=styles.css.map */

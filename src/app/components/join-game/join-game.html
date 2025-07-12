@@ -1,0 +1,23 @@
+<div class="join-game-container">
+  <h2>Join Game</h2>
+
+  <form (ngSubmit)="joinGame()">
+    <label for="playerName">Your Name:</label>
+    <input
+      id="playerName"
+      type="text"
+      [(ngModel)]="playerName"
+      name="playerName"
+      required
+      autofocus
+    />
+
+    <button type="submit" [disabled]="joining || !playerName">
+      {{ joining ? 'Joining...' : 'Join Game' }}
+    </button>
+
+    <div *ngIf="errorMessage" class="error">
+      {{ errorMessage }}
+    </div>
+  </form>
+</div>
