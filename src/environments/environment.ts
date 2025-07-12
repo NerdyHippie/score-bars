@@ -1,11 +1,11 @@
 export const environment = {
   production: false,
   firebaseConfig: {
-    apiKey: "AIzaSyAPqG5D76SsMNViD_5OV4_dR_t4CFx5z9c",
-    authDomain: "nh-ai-helloworld.firebaseapp.com",
-    projectId: "nh-ai-helloworld",
-    storageBucket: "nh-ai-helloworld.firebasestorage.app",
-    messagingSenderId: "139004973107",
-    appId: "1:139004973107:web:e5666f74d5cba9c244d346"
+    apiKey: "AIzaSyBaqIZdjSPR4LpEhJ9LSHTZ8cTo8P2eZBc",
+    authDomain: "score-bars.firebaseapp.com",
+    projectId: "score-bars",
+    storageBucket: "score-bars.firebasestorage.app",
+    messagingSenderId: "2344310702",
+    appId: "1:2344310702:web:2d712f262814df11a01a3f"
   }
 };

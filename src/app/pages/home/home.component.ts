@@ -52,9 +52,9 @@ export class HomeComponent implements OnInit {
 
   startNewGame() {
     const dialogRef = this.dialog.open(NewGameModalComponent);
-    dialogRef.afterClosed().subscribe(mode => {
-      if (mode) {
-        this.router.navigate(['/new-game'], { queryParams: { mode } });
+    dialogRef.afterClosed().subscribe(gameData => {
+      if (gameData) {
+        this.router.navigate(['/new-game'], { queryParams: { mode: gameData.mode, playerName: gameData.playerName } });
       }
     });
   }
