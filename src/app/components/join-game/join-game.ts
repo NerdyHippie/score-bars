@@ -61,7 +61,9 @@ export class JoinGameComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      await signInAnonymously(this.auth);
+      const signInData = await signInAnonymously(this.auth);
+      
+
       const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
       const lobbySnap = await getDoc(lobbyRef);
       if (!lobbySnap.exists()) {
@@ -73,7 +75,7 @@ export class JoinGameComponent implements OnInit {
       if (nameTaken) throw new Error('That name is already taken.');
 
       await updateDoc(lobbyRef, {
-        players: arrayUnion({ name: this.playerName })
+        players: arrayUnion({ name: this.playerName, uid: signInData?.user?.uid })
       });
     } catch (err: any) {
       console.error('[JoinGame] Error in markReady:', err);
