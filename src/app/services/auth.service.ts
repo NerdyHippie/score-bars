@@ -7,7 +7,7 @@ import {
   GoogleAuthProvider,
   FacebookAuthProvider,
   signOut,
-  User
+  User, authState
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -16,6 +16,7 @@ import {
   getDoc
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
+import {firstValueFrom} from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -87,5 +88,23 @@ export class AuthService {
     await signOut(this.auth);
     this.UserData = null;
     this.router.navigate(['/']);
+  }
+
+  // Sync version: for use after user is confirmed to be logged in
+  getCurrentUserId(): string {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    return user.uid;
+  }
+
+  // Async version: use if you aren't sure user is loaded
+  async getCurrentUserIdAsync(): Promise<string> {
+    const user = await firstValueFrom(authState(this.auth));
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    return user.uid;
   }
 }
