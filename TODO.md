@@ -35,3 +35,4 @@
 - **Friend mechanism for players**
   - Let players connect via an invite code
   - Consider direct invites for friends as an alternate joining method
+
