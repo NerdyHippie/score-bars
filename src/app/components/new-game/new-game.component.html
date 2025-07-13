@@ -9,11 +9,33 @@
 </div>
 
 <div *ngIf="mode === 'remote' && gameId">
-  <h2>Share This Link</h2>
-  <p>Send this to your friend to join the game:</p>
-  <code>{{ 'https://your-app.com/game/' + gameId }}</code>
+  <h2>Remote Game Lobby</h2>
+
+  <p>Share this link to invite players:</p>
+  <div class="share-link">
+    <input type="text" [value]="shareLink" readonly />
+  </div>
+
+  <h3>Joined Players</h3>
+  <ul>
+    <li *ngFor="let player of joinedPlayers">{{ player.name }}</li>
+  </ul>
+
+  <button
+    mat-flat-button
+    color="primary"
+    (click)="startRemoteGame()"
+    [disabled]="loading"
+  >
+    {{ loading ? 'Starting...' : 'Start Game' }}
+  </button>
+
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
 </div>
 
 <div *ngIf="mode === 'solo'">
-  <p>Creating solo game...</p>
+  <h2>Start a Solo Game</h2>
+  <button (click)="submitSoloGame()">Start Game</button>
 </div>

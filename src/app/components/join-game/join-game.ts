@@ -1,6 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Firestore, doc, getDoc, updateDoc, arrayUnion } from '@angular/fire/firestore';
+import {
+  Firestore,
+  doc,
+  getDoc,
+  updateDoc,
+  onSnapshot,
+  arrayUnion
+} from '@angular/fire/firestore';
+import { Auth, signInAnonymously } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -16,36 +24,59 @@ export class JoinGameComponent implements OnInit {
   gameId = '';
   joining = false;
   errorMessage = '';
+  joinedPlayers: { name: string }[] = [];
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
+  private auth = inject(Auth);
 
   ngOnInit(): void {
     this.gameId = this.route.snapshot.queryParamMap.get('gameId') ?? '';
+    if (!this.gameId) return;
+
+    const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
+
+    onSnapshot(lobbyRef, (snapshot) => {
+      const data = snapshot.data();
+      if (data) {
+        this.joinedPlayers = data['players'] ?? [];
+        const started = data['started'];
+        if (started) {
+          this.router.navigate(['/game/' + this.gameId]);
+        }
+      }
+    });
   }
 
-  async joinGame() {
+  signInAnonymously() {
+    signInAnonymously(this.auth).catch((err) => {
+      this.errorMessage = 'Unable to authenticate anonymously.';
+    });
+  }
+
+  async markReady() {
     if (!this.playerName || !this.gameId) return;
     this.joining = true;
     this.errorMessage = '';
 
     try {
-      const gameRef = doc(this.firestore, `games/${this.gameId}`);
-      const gameSnap = await getDoc(gameRef);
-      if (!gameSnap.exists()) throw new Error('Game not found.');
+      await signInAnonymously(this.auth);
+      const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
+      const lobbySnap = await getDoc(lobbyRef);
+      if (!lobbySnap.exists()) {
+        throw new Error('Lobby not found.');
+      }
 
-      const data = gameSnap.data();
-      const existingPlayers = (data?.['players'] ?? []) as { name: string }[];
-      const nameTaken = existingPlayers.some(p => p.name.toLowerCase() === this.playerName.toLowerCase());
-      if (nameTaken) throw new Error('That name is already taken. Please choose a different one.');
+      const existing = lobbySnap.data()?.['players'] ?? [];
+      const nameTaken = existing.some((p: any) => p.name.toLowerCase() === this.playerName.toLowerCase());
+      if (nameTaken) throw new Error('That name is already taken.');
 
-      await updateDoc(gameRef, {
+      await updateDoc(lobbyRef, {
         players: arrayUnion({ name: this.playerName })
       });
-
-      this.router.navigate(['/game', this.gameId]);
     } catch (err: any) {
+      console.error('[JoinGame] Error in markReady:', err);
       this.errorMessage = err.message ?? 'Something went wrong.';
     } finally {
       this.joining = false;

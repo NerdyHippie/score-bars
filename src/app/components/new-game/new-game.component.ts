@@ -1,14 +1,16 @@
-import { Component, OnInit, ViewChildren, ElementRef, QueryList } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { Firestore, collection, addDoc } from '@angular/fire/firestore';
-import { inject } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
+import { Component, OnInit, QueryList, ViewChildren, ElementRef, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  updateDoc,
+  collection,
+  serverTimestamp,
+  onSnapshot
+} from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-interface Player {
-  name: string;
-}
 
 @Component({
   selector: 'app-new-game',
@@ -18,59 +20,94 @@ interface Player {
   imports: [CommonModule, FormsModule],
 })
 export class NewGameComponent implements OnInit {
-  mode: 'remote' | 'local' | 'solo' | null = null;
-  players: Player[] = [{ name: 'Player 1' }, { name: 'Player 2' }];
-  gameId: string | null = null;
-
+  loading: boolean = false;
+  errorMessage: string = '';
   @ViewChildren('playerInput') playerInputs!: QueryList<ElementRef>;
+
+  mode: 'remote' | 'local' | 'solo' | null = null;
+  playerName: string = '';
+  gameId: string = '';
+  players: { name: string }[] = [ { name: '' }, { name: '' } ];
+  joinedPlayers: { name: string }[] = [];
+  shareLink: string = '';
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
-  private auth = inject(Auth);
 
   ngOnInit(): void {
     this.mode = this.route.snapshot.queryParamMap.get('mode') as any;
+    this.playerName = this.route.snapshot.queryParamMap.get('playerName') ?? 'Player';
 
-    if (this.mode === 'solo') {
-      this.createGame([{ name: 'Solo Player' }]);
-    } else if (this.mode === 'remote') {
-      this.createGame([]); // wait for players to join remotely
+    if (this.mode === 'remote') {
+      this.gameId = doc(collection(this.firestore, 'games')).id;
+      this.shareLink = `${window.location.origin}/join-game?mode=remote&gameId=${this.gameId}`;
+
+      const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
+      setDoc(lobbyRef, {
+        players: [{ name: this.playerName }],
+        createdAt: serverTimestamp(),
+        mode: 'remote'
+      });
+
+      // Real-time sync of joined players
+      onSnapshot(lobbyRef, (snapshot) => {
+        const data = snapshot.data();
+        this.joinedPlayers = data?.['players'] ?? [];
+      });
     }
   }
 
   addPlayerField() {
-    this.players.push({ name: `Player ${this.players.length + 1}` });
+    this.players.push({ name: '' });
     setTimeout(() => {
       const inputs = this.playerInputs.toArray();
       const lastInput = inputs[inputs.length - 1];
-      if (lastInput) {
-        lastInput.nativeElement.focus();
-        lastInput.nativeElement.select();
-      }
-    });
+      lastInput?.nativeElement?.focus();
+    }, 100);
   }
 
-  async submitLocalGame() {
-    const filteredPlayers = this.players
-      .map(p => ({ name: p.name.trim() }))
-      .filter(p => p.name);
-
-    if (filteredPlayers.length < 2) return alert('Please enter at least 2 player names.');
-
-    await this.createGame(filteredPlayers);
+  submitLocalGame() {
+    const filled = this.players.filter(p => p.name.trim());
+    if (filled.length >= 2) {
+      const newGameId = doc(collection(this.firestore, 'games')).id;
+      const gameRef = doc(this.firestore, `games/${newGameId}`);
+      setDoc(gameRef, {
+        players: filled,
+        createdAt: serverTimestamp(),
+        mode: 'local'
+      }).then(() => this.router.navigate(['/game', newGameId]));
+    }
   }
 
-  async createGame(players: Player[]) {
-    const uid = this.auth.currentUser?.uid ?? 'anonymous';
-    const gamesRef = collection(this.firestore, 'games');
-    const newGame = await addDoc(gamesRef, {
-      createdBy: uid,
-      players: players,
-      scores: players.map(() => 0),
-      createdAt: new Date(),
-      mode: this.mode
-    });
-    this.router.navigate(['/game', newGame.id]);
+  submitSoloGame() {
+    const newGameId = doc(collection(this.firestore, 'games')).id;
+    const gameRef = doc(this.firestore, `games/${newGameId}`);
+    setDoc(gameRef, {
+      players: [{ name: this.playerName }],
+      createdAt: serverTimestamp(),
+      mode: 'solo'
+    }).then(() => this.router.navigate(['/game', newGameId]));
+  }
+
+  startRemoteGame() {
+    const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
+    const gameRef = doc(this.firestore, `games/${this.gameId}`);
+    this.loading = true;
+    this.errorMessage = '';
+
+    setDoc(gameRef, {
+      players: this.joinedPlayers,
+      createdAt: serverTimestamp(),
+      mode: 'remote'
+    })
+      .then(() => updateDoc(lobbyRef, { started: true }).then(() => this.router.navigate(['/game', this.gameId])))
+      .catch((err) => {
+        console.error('Error starting game:', err);
+        this.errorMessage = 'Failed to start game. Please try again.';
+      })
+      .finally(() => {
+        this.loading = false;
+      });
   }
 }

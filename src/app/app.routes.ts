@@ -20,7 +20,12 @@ export const routes: Routes = [
   },
   {
     path: 'new-game',
-    loadComponent: () => import('./components/new-game/new-game.component').then(m => m.NewGameComponent)
+    loadComponent: () => import('./components/new-game/new-game.component').then(m => m.NewGameComponent),
+    canActivate: [canActivate]
+  },
+  {
+    path: 'join-game',
+    loadComponent: () => import('./components/join-game/join-game').then(m => m.JoinGameComponent)
   },
   { path: '**', redirectTo: '' }
 ];
