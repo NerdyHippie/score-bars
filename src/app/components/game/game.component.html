@@ -1,4 +1,5 @@
 <div class="game-header">
+  <h2 class="now-playing">Now playing: {{ players[currentPlayerIndex].name }}</h2>
   <!--<span>Game ID: {{ gameId }}</span>-->
   <span></span>
   <button mat-button (click)="goHome()" class="home-button">Back to Home</button>
@@ -7,10 +8,10 @@
 <div class="players">
   <mat-chip-set>
     <mat-chip
-      *ngFor="let player of players; index as i"
+      *ngFor="let player of players; let i = index"
       [class.current-player]="i === currentPlayerIndex"
-      [class.eliminated-player]="player.eliminated"
-    >
+      [class.enlarged]="gameMode === 'local' && i === currentPlayerIndex || gameMode === 'remote' && player.uid === myPlayerId"
+      [class.eliminated-player]="player.eliminated">
       {{ player.name }} | {{ scores[i] }}
     </mat-chip>
   </mat-chip-set>
