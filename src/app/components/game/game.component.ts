@@ -32,7 +32,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   gameId: string = '';
   gameMode: string = '';
-  players: { name: string, uid?: string }[] = [];
+  players: { name: string, uid?: string, eliminated: boolean }[] = [];
   scores: number[] = [];
   currentPlayerIndex: number = 0;
   currentPlayerId: string = '';
@@ -174,6 +174,21 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
+  getNextPlayer(): { nextIndex: number, nextPlayer: { name: string; uid?: string; eliminated: boolean }} {
+    const playerCount = this.players.length;
+    const currentIndex = this.players.findIndex(p => p.uid === this.currentPlayerId);
+
+    for (let i = 1; i <= playerCount; i++) {
+      const nextIndex = (currentIndex + i) % playerCount;
+      const nextPlayer = this.players[nextIndex];
+      if (!nextPlayer.eliminated) {
+        return {nextIndex, nextPlayer};
+      }
+    }
+
+    throw ('No players found');
+  }
+
   async endTurn() {
     if (this.gameOver || !this.myTurn || (this.turnScore === 0 && this.scoringOptions.length > 0)) return;
 
@@ -200,33 +215,37 @@ export class GameComponent implements OnInit, OnDestroy {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
     } else if (this.finalRound) {
+
       const totalPlayers = this.players.length;
       const lastIndexInRound = (this.finalRoundStarterIndex! + totalPlayers - 1) % totalPlayers;
       const justFinishedLastFinalTurn = this.currentPlayerIndex === lastIndexInRound;
 
-      if (justFinishedLastFinalTurn) {
-        const highestScore = Math.max(...this.scores);
-        this.players.forEach((_, i) => {
-          if (i !== this.finalRoundStarterIndex && this.scores[i] < highestScore) {
-            this.eliminatedPlayers.add(i);
-          }
-        });
+      const highestScore = Math.max(...this.scores);
+      const myScore = this.scores[this.currentPlayerIndex];
 
-        if (this.players.filter((_, i) => !this.eliminatedPlayers.has(i)).length === 1) {
-          this.gameOver = true;
-          const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
-          this.winnerName = this.players[winnerIndex].name;
-          gameUpdate.gameIsFinished = true;
-          gameUpdate.gameOver = true;
-          gameUpdate.winnerName = this.winnerName;
-        }
+      if (myScore < highestScore) {
+        player.eliminated = true;
+        gameUpdate.players = this.players;
       }
+
     }
 
-    let nextIndex = this.currentPlayerIndex;
-    do {
-      nextIndex = (nextIndex + 1) % this.players.length;
-    } while (this.eliminatedPlayers.has(nextIndex));
+    const nextUp = this.getNextPlayer();
+    const nextIndex = nextUp.nextIndex;
+
+
+    const remainingPlayers = this.players.filter(player => !player.eliminated);
+
+    if (remainingPlayers.length === 1) {
+      this.gameOver = true;
+
+      const winningPlayer = remainingPlayers[0];
+
+      this.winnerName = winningPlayer.name;
+      gameUpdate.gameIsFinished = true;
+      gameUpdate.gameOver = true;
+      gameUpdate.winnerName = this.winnerName;
+    }
 
     gameUpdate.finalRound = this.finalRound;
     gameUpdate.finalRoundStarterIndex = this.finalRoundStarterIndex;

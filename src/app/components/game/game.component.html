@@ -9,7 +9,7 @@
     <mat-chip
       *ngFor="let player of players; index as i"
       [class.current-player]="i === currentPlayerIndex"
-      [class.eliminated-player]="eliminatedPlayers.has(i)"
+      [class.eliminated-player]="player.eliminated"
     >
       {{ player.name }} | {{ scores[i] }}
     </mat-chip>
