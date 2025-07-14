@@ -1,9 +1,12 @@
+- **BUGS:**
+  - Players can re-roll after rolling dice without having to bank anything
+  - Win conditions not working - players can continue playing after game has ended
+
+
 - **Fix flow in NewGameModal**:
   - Choose game type first (reorder options to: remote, local, solo)
   - Pre-populate Player Name with user's display name
   - If user enters an alternate name, store it in their Firestore user record for future use
-
-- **Fix win conditions**
 
 - **Your Turn indicators**
   - Add for remote games

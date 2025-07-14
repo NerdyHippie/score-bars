@@ -54,6 +54,8 @@ export class GameComponent implements OnInit, OnDestroy {
   gameOver = false;
   winnerName: string = '';
 
+  private bankedSinceLastRoll = false;
+
   ngOnInit() {
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
@@ -76,12 +78,9 @@ export class GameComponent implements OnInit, OnDestroy {
 
       this.myTurn = this.gameMode === 'local' || this.currentPlayerId === this.myPlayerId;
 
-// If it's my turn and I haven't rolled yet, reset dice to start turn
       if (this.myTurn && !this.hasRolled) {
         this.resetDice();
       }
-
-      
     });
   }
 
@@ -117,10 +116,15 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     this.scoringOptions = [];
     this.noScoreMessage = false;
+    this.bankedSinceLastRoll = false;
+  }
+
+  isRollAgainBlocked(): boolean {
+    return (!this.myTurn || this.rolling || (this.hasRolled && !this.bankedSinceLastRoll && !this.allDiceScoredMessage))
   }
 
   rollDice() {
-    if (!this.myTurn || this.rolling || (this.hasRolled && this.bankedDice.length === 0 && !this.allDiceScoredMessage)) return;
+    if (this.isRollAgainBlocked()) return;
 
     const diceToRoll = Math.max(0,
       this.allDiceScoredMessage ? 6 :
@@ -133,6 +137,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.hasRolled = true;
     this.noScoreMessage = false;
     this.allDiceScoredMessage = false;
+    this.bankedSinceLastRoll = false;
 
     setTimeout(() => {
       this.dice = newRoll;
@@ -161,6 +166,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.bankedDice.push(val);
     });
     this.calculateScoringOptions();
+    this.bankedSinceLastRoll = true;
 
     if (this.bankedDice.length === 6) {
       this.resetDice(true);
@@ -191,8 +197,6 @@ export class GameComponent implements OnInit, OnDestroy {
       lastPlayer: this.currentPlayerIndex
     };
 
-
-    // TODO: Debug Win conditions for final round, currently not working correctly
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
@@ -212,7 +216,6 @@ export class GameComponent implements OnInit, OnDestroy {
       }
     }
 
-
     let nextIndex = this.currentPlayerIndex;
     do {
       nextIndex = (nextIndex + 1) % this.players.length;
@@ -221,13 +224,12 @@ export class GameComponent implements OnInit, OnDestroy {
     gameUpdate.currentPlayerIndex = nextIndex;
     gameUpdate.currentPlayerId = this.players[nextIndex].uid;
 
-
     await updateDoc(gameRef, gameUpdate);
 
     this.turnScore = 0;
     this.bankedDice = [];
     this.hasRolled = false;
-
+    this.bankedSinceLastRoll = false;
 
     this.currentPlayerIndex = nextIndex;
 

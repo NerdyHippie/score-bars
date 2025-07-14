@@ -93,7 +93,7 @@ Score Bars is a multi-player dice game implemented in Angular using Firebase Fir
 
 ## 🧱 Tech Stack
 
-* **Angular 17+** (standalone components)
+* **Angular 20** (standalone components)
 * **Firebase Firestore**
 * **Material Design Components**
 * **SCSS** with responsive breakpoints
@@ -108,7 +108,7 @@ Score Bars is a multi-player dice game implemented in Angular using Firebase Fir
 ---
 
 ## 🔒 Auth
-
+Anonymous sign-in for joining players
 * Includes logout option in toolbar
 * On small screens:
 
