@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Firestore, doc, getDoc, updateDoc, arrayUnion, docData } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, arrayUnion, docData } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -21,6 +21,8 @@ import { Subscription } from 'rxjs';
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {
+  private readonly TARGET_SCORE = 2000;
+  private readonly ENTRY_THRESHOLD = 100;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
@@ -66,22 +68,18 @@ export class GameComponent implements OnInit, OnDestroy {
       this.gameMode = data.mode;
 
       if (!this.myPlayerId) {
-        if (this.gameMode === 'local') {
-          this.myPlayerId = '1';
-        } else {
-          this.myPlayerId = this.authService.getCurrentUserId();
-        }
+        this.myPlayerId = this.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
       }
 
       this.players = data.players;
       this.scores = data.scores || Array(this.players.length).fill(0);
       this.currentPlayerIndex = data.currentPlayerIndex ?? 0;
       this.currentPlayerId = data.currentPlayerId ?? 'not set';
-
-      this.myTurn = this.gameMode === 'local' || this.currentPlayerId === this.myPlayerId;
-
+      this.finalRound = data.finalRound || false;
+      this.finalRoundStarterIndex = data.finalRoundStarterIndex ?? null;
       this.gameOver = data.gameOver || false;
       this.winnerName = data.winnerName || '';
+      this.myTurn = this.gameMode === 'local' || this.currentPlayerId === this.myPlayerId;
 
       if (this.myTurn && !this.hasRolled) {
         this.resetDice();
@@ -92,7 +90,6 @@ export class GameComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.gameSub?.unsubscribe();
   }
-
   getDebugData(): string {
     const debugData = {
       allDiceScoredMessage: this.allDiceScoredMessage,
@@ -106,7 +103,6 @@ export class GameComponent implements OnInit, OnDestroy {
     };
     return JSON.stringify(debugData);
   }
-
   goHome() {
     this.router.navigate(['/home']);
   }
@@ -125,19 +121,17 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   isRollAgainBlocked(): boolean {
-    return (!this.myTurn || this.rolling || (this.hasRolled && !this.bankedSinceLastRoll && !this.allDiceScoredMessage))
+    return (!this.myTurn || this.rolling || (this.hasRolled && !this.bankedSinceLastRoll && !this.allDiceScoredMessage));
   }
 
   rollDice() {
-    if (this.gameOver) return;
-    if (this.isRollAgainBlocked()) return;
+    if (this.gameOver || this.isRollAgainBlocked()) return;
 
     const diceToRoll = Math.max(0,
       this.allDiceScoredMessage ? 6 :
         this.dice.length === 0 ? 6 :
           6 - this.bankedDice.length
     );
-
     const newRoll = this.diceService.rollDice(diceToRoll);
     this.rolling = true;
     this.hasRolled = true;
@@ -162,9 +156,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   bank(option: { label: string, score: number, dice: number[] }) {
-    if (this.gameOver) return;
-    if (!this.myTurn) return;
-    if (this.bankedDice.length + option.dice.length > 6) return;
+    if (this.gameOver || !this.myTurn || this.bankedDice.length + option.dice.length > 6) return;
 
     this.turnScore += option.score;
     option.dice.forEach(val => {
@@ -183,11 +175,10 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   async endTurn() {
-    if (this.gameOver) return;
-    if (!this.myTurn) return;
+    if (this.gameOver || !this.myTurn || (this.turnScore === 0 && this.scoringOptions.length > 0)) return;
 
     const player = this.players[this.currentPlayerIndex];
-    const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= 500;
+    const shouldScore = this.scores[this.currentPlayerIndex] > 0 || this.turnScore >= this.ENTRY_THRESHOLD;
     const appliedScore = shouldScore ? this.turnScore : 0;
 
     this.scores[this.currentPlayerIndex] += appliedScore;
@@ -205,24 +196,30 @@ export class GameComponent implements OnInit, OnDestroy {
       lastPlayer: this.currentPlayerIndex
     };
 
-    if (!this.finalRound && this.scores[this.currentPlayerIndex] >= 10000) {
+    if (!this.finalRound && this.scores[this.currentPlayerIndex] >= this.TARGET_SCORE) {
       this.finalRound = true;
       this.finalRoundStarterIndex = this.currentPlayerIndex;
     } else if (this.finalRound) {
-      const highestScore = Math.max(...this.scores);
-      this.players.forEach((_, i) => {
-        if (i !== this.finalRoundStarterIndex && this.scores[i] < highestScore) {
-          this.eliminatedPlayers.add(i);
-        }
-      });
+      const totalPlayers = this.players.length;
+      const lastIndexInRound = (this.finalRoundStarterIndex! + totalPlayers - 1) % totalPlayers;
+      const justFinishedLastFinalTurn = this.currentPlayerIndex === lastIndexInRound;
 
-      if (this.players.filter((_, i) => !this.eliminatedPlayers.has(i)).length === 1) {
-        this.gameOver = true;
-        const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
-        this.winnerName = this.players[winnerIndex].name;
-        gameUpdate.gameIsFinished = true;
-        gameUpdate.gameOver = true;
-        gameUpdate.winnerName = this.winnerName;
+      if (justFinishedLastFinalTurn) {
+        const highestScore = Math.max(...this.scores);
+        this.players.forEach((_, i) => {
+          if (i !== this.finalRoundStarterIndex && this.scores[i] < highestScore) {
+            this.eliminatedPlayers.add(i);
+          }
+        });
+
+        if (this.players.filter((_, i) => !this.eliminatedPlayers.has(i)).length === 1) {
+          this.gameOver = true;
+          const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
+          this.winnerName = this.players[winnerIndex].name;
+          gameUpdate.gameIsFinished = true;
+          gameUpdate.gameOver = true;
+          gameUpdate.winnerName = this.winnerName;
+        }
       }
     }
 
@@ -231,6 +228,8 @@ export class GameComponent implements OnInit, OnDestroy {
       nextIndex = (nextIndex + 1) % this.players.length;
     } while (this.eliminatedPlayers.has(nextIndex));
 
+    gameUpdate.finalRound = this.finalRound;
+    gameUpdate.finalRoundStarterIndex = this.finalRoundStarterIndex;
     gameUpdate.currentPlayerIndex = nextIndex;
     gameUpdate.currentPlayerId = this.players[nextIndex].uid;
 
@@ -240,9 +239,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.bankedDice = [];
     this.hasRolled = false;
     this.bankedSinceLastRoll = false;
-
     this.currentPlayerIndex = nextIndex;
-
     this.resetDice();
   }
 }
