@@ -57,6 +57,8 @@ export class GameComponent implements OnInit, OnDestroy {
   private bankedSinceLastRoll = false;
 
   ngOnInit() {
+    this.gameOver = false;
+    this.winnerName = '';
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
 
@@ -77,6 +79,9 @@ export class GameComponent implements OnInit, OnDestroy {
       this.currentPlayerId = data.currentPlayerId ?? 'not set';
 
       this.myTurn = this.gameMode === 'local' || this.currentPlayerId === this.myPlayerId;
+
+      this.gameOver = data.gameOver || false;
+      this.winnerName = data.winnerName || '';
 
       if (this.myTurn && !this.hasRolled) {
         this.resetDice();
@@ -124,6 +129,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   rollDice() {
+    if (this.gameOver) return;
     if (this.isRollAgainBlocked()) return;
 
     const diceToRoll = Math.max(0,
@@ -156,6 +162,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   bank(option: { label: string, score: number, dice: number[] }) {
+    if (this.gameOver) return;
     if (!this.myTurn) return;
     if (this.bankedDice.length + option.dice.length > 6) return;
 
@@ -176,6 +183,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   async endTurn() {
+    if (this.gameOver) return;
     if (!this.myTurn) return;
 
     const player = this.players[this.currentPlayerIndex];
@@ -213,6 +221,8 @@ export class GameComponent implements OnInit, OnDestroy {
         const winnerIndex = this.scores.indexOf(Math.max(...this.scores));
         this.winnerName = this.players[winnerIndex].name;
         gameUpdate.gameIsFinished = true;
+        gameUpdate.gameOver = true;
+        gameUpdate.winnerName = this.winnerName;
       }
     }
 
