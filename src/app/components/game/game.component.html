@@ -27,31 +27,44 @@
 
 <div class="turn-controls">
   <span class="turn-score">Current Turn: {{ turnScore }}</span>
+
   <button
     mat-raised-button
     color="primary"
     (click)="rollDice()"
-    [disabled]="rolling || noScoreMessage || gameOver || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
+    [disabled]="!myTurn || rolling || noScoreMessage || gameOver || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
     {{ hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
 
-  <button mat-raised-button color="accent" (click)="endTurn()">End Turn</button>
+  <button
+    mat-raised-button
+    color="accent"
+    (click)="endTurn()"
+    [disabled]="!myTurn || gameOver">
+    End Turn
+  </button>
 </div>
 
-<div class="score-options">
+<div class="score-options game-messages">
   <ng-container *ngIf="scoringOptions.length > 0">
     <div class="scoring-list">
       <div
         *ngFor="let option of scoringOptions"
         class="scoring-option"
-        (click)="bank(option)"
-      >
-        {{ option.label }} ({{ option.score }})
+        (click)="bank(option)">
+        <div class="dice-row">
+          <img
+            *ngFor="let val of option.dice"
+            [src]="'assets/images/die-' + val + '.svg'"
+            alt="die"
+            class="scoring-die" />
+        </div>
+        <div class="score-label">{{ option.score }}</div>
       </div>
     </div>
   </ng-container>
 
-  <div class="message error" *ngIf="noScoreMessage">
+  <div class="message warning" *ngIf="noScoreMessage">
     No dice have scored. You must end your turn.
   </div>
 
@@ -59,14 +72,15 @@
     All dice scored. You may roll again.
   </div>
 
-  <div class="message final" *ngIf="finalRound && !gameOver">
+  <div class="message info" *ngIf="finalRound && !gameOver">
     Final round has begun! Beat the top score or be eliminated.
   </div>
 
-  <div class="message success" *ngIf="gameOver">
+  <div class="message endgame" *ngIf="gameOver">
     Game over! {{ winnerName }} wins!
   </div>
 </div>
 
 <pre class="debug-container" [innerHTML]="getDebugData() | prettyjson: [false, 4]"></pre>
+
 
