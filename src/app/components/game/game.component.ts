@@ -21,8 +21,8 @@ import { Subscription } from 'rxjs';
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {
-  private readonly TARGET_SCORE = 2000;
-  private readonly ENTRY_THRESHOLD = 100;
+  private readonly TARGET_SCORE = 10000;
+  private readonly ENTRY_THRESHOLD = 500;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
@@ -47,6 +47,7 @@ export class GameComponent implements OnInit, OnDestroy {
   turnScore = 0;
   scoringOptions: { label: string, score: number, dice: number[] }[] = [];
   bankedDice: number[] = [];
+  bankedThisTurn: string[] = [];
   noScoreMessage = false;
   allDiceScoredMessage = false;
 
@@ -81,6 +82,10 @@ export class GameComponent implements OnInit, OnDestroy {
       this.winnerName = data.winnerName || '';
       this.myTurn = this.gameMode === 'local' || this.currentPlayerId === this.myPlayerId;
 
+      this.dice = data.activeDice || [];
+      this.bankedThisTurn = data.activeBankedDice || [];
+      this.scoringOptions = data.activeScoringOptions || [];
+
       if (this.myTurn && !this.hasRolled) {
         this.resetDice();
       }
@@ -105,6 +110,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
   goHome() {
     this.router.navigate(['/home']);
+  }
+  getActivePlayerName() {
+    return this.players[this.currentPlayerIndex]?.name || 'error'
   }
 
   resetDice(reroll: boolean = false) {
@@ -143,6 +151,12 @@ export class GameComponent implements OnInit, OnDestroy {
       this.dice = newRoll;
       this.rolling = false;
       this.calculateScoringOptions();
+      if (this.myTurn && this.gameMode === 'remote') {
+        updateDoc(doc(this.firestore, `games/${this.gameId}`), {
+          activeDice: this.dice,
+          activeScoringOptions: this.scoringOptions
+        });
+      }
 
       if (this.scoringOptions.length === 0) {
         this.noScoreMessage = true;
@@ -165,6 +179,15 @@ export class GameComponent implements OnInit, OnDestroy {
       this.bankedDice.push(val);
     });
     this.calculateScoringOptions();
+    if (this.myTurn && this.gameMode === 'remote') {
+      console.log(this.bankedThisTurn)
+      this.bankedThisTurn.push(option.dice.join('|'))
+      console.log(this.bankedThisTurn)
+      updateDoc(doc(this.firestore, `games/${this.gameId}`), {
+        activeBankedDice: this.bankedThisTurn,
+        activeScoringOptions: this.scoringOptions
+      });
+    }
     this.bankedSinceLastRoll = true;
 
     if (this.bankedDice.length === 6) {

@@ -1,5 +1,5 @@
 <div class="game-header">
-  <h2 class="now-playing">Now playing: {{ players[currentPlayerIndex].name }}</h2>
+  <h2 class="now-playing">Now playing: {{ getActivePlayerName() }}</h2>
   <!--<span>Game ID: {{ gameId }}</span>-->
   <span></span>
   <button mat-button (click)="goHome()" class="home-button">Back to Home</button>
@@ -46,6 +46,12 @@
   </button>
 </div>
 
+<div class="score-options game-messages">
+  <pre>Dice {{dice | json}}</pre>
+  <pre>Banked Turn {{bankedThisTurn | json}}</pre>
+  <pre>Banked Dice {{bankedDice | json}}</pre>
+  <pre>Score Opts {{scoringOptions | json}}</pre>
+</div>
 <div class="score-options game-messages">
   <ng-container *ngIf="scoringOptions.length > 0">
     <div class="scoring-list">
