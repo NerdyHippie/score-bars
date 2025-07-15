@@ -123,11 +123,3 @@ Anonymous sign-in for joining players
 * Header minimized in landscape mode
 * Cards and buttons scale appropriately
 
----
-
-## 🚧 Known Issues / TODO
-
-* [ ] Detect and highlight scoring dice more clearly
-* [ ] Add animations to dice rolls
-* [ ] Implement persistent player sessions
-* [ ] Improve accessibility (508 compliance)

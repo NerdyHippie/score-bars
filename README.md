@@ -1,59 +1,104 @@
-# Score Bars
+# 🎲 Score Bars
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.5.
+Score Bars is a real-time, multiplayer dice game built with Angular and Firebase. It supports remote and local play, dynamic scoring, and real-time sync using Firestore. The UI is built with Angular Material and optimized for desktop and mobile.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Tech Stack
 
+- **Angular v20** — Component-based frontend framework
+- **Angular Material** — UI components and layout
+- **Firebase Hosting** — Fast, global deployment
+- **Cloud Firestore** — Real-time backend and game state sync
+
+---
+
+## 🛠 Getting Started
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/your-org/score-bars.git
+cd score-bars
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Set up Firebase
+Ensure you have the [Firebase CLI](https://firebase.google.com/docs/cli) installed:
+```bash
+npm install -g firebase-tools
+firebase login
+```
+
+Then initialize your Firebase project:
+```bash
+firebase use --add
+firebase init
+```
+Make sure to enable:
+- Hosting (set the public directory to `dist/score-bars-app/browser`)
+- Firestore rules and indexes if prompted
+
+### 4. Run locally
 ```bash
 ng serve
 ```
+Visit [http://localhost:4200](http://localhost:4200) to play.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 📦 Build & Deploy
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+To build for production:
 ```bash
-ng generate component component-name
+ng build --configuration production
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+To deploy to Firebase:
 ```bash
-ng generate --help
+firebase deploy
 ```
 
-## Building
+---
 
-To build the project run:
+## 🧪 Testing
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
+Run unit tests:
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
+End-to-end testing (optional setup required):
 ```bash
 ng e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## ⚙️ Configuration Notes
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- The `angular.json` has been modified to include `src/styles.scss` in the `styles` array.
+- During `firebase init`, the correct public directory is `dist/score-bars-app/browser`.
+
+---
+
+## 📄 Project Docs
+
+For a full breakdown of project behavior and architecture, see:
+- [`Requirements.md`](./Requirements.md) — App logic and design goals
+- [`TODO.md`](./TODO.md) — Live punchlist and in-progress features
+
+---
+
+## 📚 Resources
+- [Angular CLI Reference](https://angular.dev/tools/cli)
+- [Angular Material](https://material.angular.io/)
+- [Firebase Docs](https://firebase.google.com/docs)
+
+---
+
+## 💡 Contributing
+Want to contribute? Fork the repo and submit a PR — we welcome bug fixes, UI polish, and new ideas!
