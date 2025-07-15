@@ -21,7 +21,7 @@
   <img
     *ngFor="let die of dice"
     class="die-image"
-    [src]="die === 0 ? 'assets/images/die-ready.svg' : 'assets/images/die-' + die + '.svg'"
+    [src]="(die === 9) ? 'assets/images/die-wait.svg' : (die === 0) ? 'assets/images/die-ready.svg' : 'assets/images/die-' + die + '.svg'"
     alt="die"
   />
 </div>
@@ -47,10 +47,10 @@
 </div>
 
 <div class="score-options game-messages">
-  <pre>Dice {{dice | json}}</pre>
-  <pre>Banked Turn {{bankedThisTurn | json}}</pre>
-  <pre>Banked Dice {{bankedDice | json}}</pre>
-  <pre>Score Opts {{scoringOptions | json}}</pre>
+  <div>dice {{dice | json}}</div>
+  <div>bankedThisTurn {{bankedThisTurn | json}}</div>
+  <div>bankedDice {{bankedDice | json}}</div>
+  <div>scoreOpts {{scoringOptions | json}}</div>
 </div>
 <div class="score-options game-messages">
   <ng-container *ngIf="scoringOptions.length > 0">

@@ -86,8 +86,13 @@ export class GameComponent implements OnInit, OnDestroy {
       this.bankedThisTurn = data.activeBankedDice || [];
       this.scoringOptions = data.activeScoringOptions || [];
 
-      if (this.myTurn && !this.hasRolled) {
-        this.resetDice();
+      if (!this.hasRolled) {
+        if (this.myTurn) {
+          this.resetDice();
+        } else {
+          this.dice = this.diceService.getWaitingDice();
+        }
+
       }
     });
   }
@@ -114,6 +119,8 @@ export class GameComponent implements OnInit, OnDestroy {
   getActivePlayerName() {
     return this.players[this.currentPlayerIndex]?.name || 'error'
   }
+
+
 
   resetDice(reroll: boolean = false) {
     this.dice = this.diceService.getReadyDice();
@@ -166,6 +173,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   calculateScoringOptions() {
+    console.log(`[calculateScoringOptions] dice: ${this.dice}`);
     this.scoringOptions = this.scoringService.getScoringOptions(this.dice);
   }
 
@@ -173,17 +181,24 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.gameOver || !this.myTurn || this.bankedDice.length + option.dice.length > 6) return;
 
     this.turnScore += option.score;
+    console.log(`[bank] turnScore: ${this.turnScore} (${option.dice})`);
     option.dice.forEach(val => {
       const index = this.dice.indexOf(val);
       if (index > -1) this.dice.splice(index, 1);
       this.bankedDice.push(val);
     });
+    console.log(`[bank] dice: ${this.dice}`);
+    console.log(`[bank] bankedDice: ${this.bankedDice}`);
+
     this.calculateScoringOptions();
+
+    console.log(`[bank] scoringOptions: ${JSON.stringify(this.scoringOptions)}`);
+
     if (this.myTurn && this.gameMode === 'remote') {
-      console.log(this.bankedThisTurn)
       this.bankedThisTurn.push(option.dice.join('|'))
-      console.log(this.bankedThisTurn)
+      console.log(`[bank] bankedThisTurn: ${this.bankedThisTurn}`)
       updateDoc(doc(this.firestore, `games/${this.gameId}`), {
+        activeDice: this.dice,
         activeBankedDice: this.bankedThisTurn,
         activeScoringOptions: this.scoringOptions
       });
@@ -191,6 +206,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.bankedSinceLastRoll = true;
 
     if (this.bankedDice.length === 6) {
+      console.log(`[bank] roll again`)
       this.resetDice(true);
       this.bankedDice = [];
       this.allDiceScoredMessage = true;
@@ -227,11 +243,14 @@ export class GameComponent implements OnInit, OnDestroy {
       timestamp: new Date()
     };
 
+    this.bankedThisTurn = [];
+
     const gameRef = doc(this.firestore, `games/${this.gameId}`);
     const gameUpdate: any = {
       scores: this.scores,
       turns: arrayUnion(turnData),
-      lastPlayer: this.currentPlayerIndex
+      lastPlayer: this.currentPlayerIndex,
+      activeBankedDice: this.bankedThisTurn
     };
 
     if (!this.finalRound && this.scores[this.currentPlayerIndex] >= this.TARGET_SCORE) {
@@ -274,6 +293,9 @@ export class GameComponent implements OnInit, OnDestroy {
     gameUpdate.finalRoundStarterIndex = this.finalRoundStarterIndex;
     gameUpdate.currentPlayerIndex = nextIndex;
     gameUpdate.currentPlayerId = this.players[nextIndex].uid;
+
+    console.log(' --- gameUpdate --- ');
+    console.log(gameUpdate);
 
     await updateDoc(gameRef, gameUpdate);
 

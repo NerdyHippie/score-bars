@@ -19,4 +19,9 @@ export class DiceService {
   getReadyDice(): number[] {
     return Array(6).fill(0); // 0 means "ready" state
   }
+
+  getWaitingDice(): number[] {
+    return Array(6).fill(9);
+
+  }
 }
