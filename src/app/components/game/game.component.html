@@ -1,6 +1,5 @@
 <div class="game-header">
   <h2 class="now-playing">Now playing: {{ getActivePlayerName() }}</h2>
-  <!--<span>Game ID: {{ gameId }}</span>-->
   <span></span>
   <button mat-button (click)="goHome()" class="home-button">Back to Home</button>
 </div>
@@ -17,77 +16,29 @@
   </mat-chip-set>
 </div>
 
-<div class="dice-container">
-  <img
-    *ngFor="let die of dice"
-    class="die-image"
-    [src]="(die === 9) ? 'assets/images/die-wait.svg' : (die === 0) ? 'assets/images/die-ready.svg' : 'assets/images/die-' + die + '.svg'"
-    alt="die"
-  />
+<app-dice-display
+  [dice]="displayDice"
+  [rolling]="rolling"
+  (animationComplete)="onAnimationDone()">
+</app-dice-display>
+
+<div class="score-options game-messages debug-container">
+  <div>dice {{ dice | json }}</div>
+  <div>bankedThisTurn {{ bankedThisTurn | json }}</div>
+  <div>bankedDice {{ bankedDice | json }}</div>
+  <div>scoreOpts {{ scoringOptions | json }}</div>
 </div>
 
-<div class="turn-controls">
-  <span class="turn-score">Current Turn: {{ turnScore }}</span>
-
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="rollDice()"
-    [disabled]="!myTurn || rolling || noScoreMessage || gameOver || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
-    {{ hasRolled ? 'Roll Again' : 'Roll' }}
-  </button>
-
-  <button
-    mat-raised-button
-    color="accent"
-    (click)="endTurn()"
-    [disabled]="!myTurn || gameOver">
-    End Turn
-  </button>
+<div class="controls">
+  <button mat-button (click)="rollDice()" [disabled]="rolling">Roll</button>
+  <button mat-button (click)="endTurn()">End Turn</button>
 </div>
 
-<div class="score-options game-messages">
-  <div>dice {{dice | json}}</div>
-  <div>bankedThisTurn {{bankedThisTurn | json}}</div>
-  <div>bankedDice {{bankedDice | json}}</div>
-  <div>scoreOpts {{scoringOptions | json}}</div>
-</div>
-<div class="score-options game-messages">
-  <ng-container *ngIf="scoringOptions.length > 0">
-    <div class="scoring-list">
-      <div
-        *ngFor="let option of scoringOptions"
-        class="scoring-option"
-        (click)="bank(option)">
-        <div class="dice-row">
-          <img
-            *ngFor="let val of option.dice"
-            [src]="'assets/images/die-' + val + '.svg'"
-            alt="die"
-            class="scoring-die" />
-        </div>
-        <div class="score-label">{{ option.score }}</div>
-      </div>
-    </div>
-  </ng-container>
-
-  <div class="message warning" *ngIf="noScoreMessage">
-    No dice have scored. You must end your turn.
-  </div>
-
-  <div class="message success" *ngIf="allDiceScoredMessage">
-    All dice scored. You may roll again.
-  </div>
-
-  <div class="message info" *ngIf="finalRound && !gameOver">
-    Final round has begun! Beat the top score or be eliminated.
-  </div>
-
-  <div class="message endgame" *ngIf="gameOver">
-    Game over! {{ winnerName }} wins!
+<div class="scoring-options">
+  <h3>Scoring Options</h3>
+  <div *ngFor="let option of scoringOptions">
+    <button mat-button (click)="bank(option)">
+      {{ option.join(', ') }} ({{ scoringService.calculateScore(option) }})
+    </button>
   </div>
 </div>
-
-<pre class="debug-container" [innerHTML]="getDebugData() | prettyjson: [false, 4]"></pre>
-
-

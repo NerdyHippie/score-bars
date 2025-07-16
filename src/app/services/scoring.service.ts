@@ -1,41 +1,54 @@
 import { Injectable } from '@angular/core';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ScoringService {
+  // Calculates the score of a single scoring option (e.g., [1, 5, 5])
+  calculateScore(dice: number[]): number {
+    const counts = this.getCounts(dice);
+    let score = 0;
 
-  getScoringOptions(dice: number[]): { label: string, score: number, dice: number[] }[] {
-    const options: { label: string, score: number, dice: number[] }[] = [];
-    const counts = Array(7).fill(0);
-    dice.forEach(d => counts[d]++);
+    for (const [die, count] of Object.entries(counts)) {
+      const dieNum = Number(die);
 
-    const pairCount = counts.filter(c => c === 2).length;
-    if (dice.length === 6 && pairCount === 3) {
-      options.push({ label: '3 Pairs', score: 1250, dice: [...dice] });
-      return options;
-    }
-
-    if (dice.length === 6 && [1, 2, 3, 4, 5, 6].every(n => dice.includes(n))) {
-      options.push({ label: '1-6 Straight', score: 5000, dice: [...dice] });
-      return options;
-    }
-
-    for (let i = 1; i <= 6; i++) {
-      if (counts[i] >= 3) {
-        let score = i === 1 ? 1000 : i * 100;
-        if (counts[i] === 4) score = i === 1 ? 2000 : 1500;
-        if (counts[i] === 5) score = i === 1 ? 3000 : 2500;
-        if (counts[i] === 6) score = i === 1 ? 4000 : 3500;
-        options.push({ label: `${counts[i]} x ${i}'s`, score, dice: Array(counts[i]).fill(i) });
-      } else if (i === 1 || i === 5) {
-        for (let j = 0; j < counts[i]; j++) {
-          const score = i === 1 ? 100 : 50;
-          options.push({ label: `${i}`, score, dice: [i] });
+      if (count >= 3) {
+        score += dieNum === 1 ? 1000 : dieNum * 100;
+        if (count > 3) {
+          score += (count - 3) * (dieNum === 1 ? 100 : 50);
         }
+      } else {
+        if (dieNum === 1) score += count * 100;
+        if (dieNum === 5) score += count * 50;
       }
     }
 
+    return score;
+  }
+
+  // Returns all subsets of dice that are valid scoring options
+  getScoringOptions(dice: number[]): number[][] {
+    const options: number[][] = [];
+
+    // Generate all non-empty subsets
+    const generateSubsets = (arr: number[], start: number, subset: number[]) => {
+      if (subset.length > 0 && this.calculateScore(subset) > 0) {
+        options.push([...subset]);
+      }
+      for (let i = start; i < arr.length; i++) {
+        subset.push(arr[i]);
+        generateSubsets(arr, i + 1, subset);
+        subset.pop();
+      }
+    };
+
+    generateSubsets(dice, 0, []);
     return options;
+  }
+
+  // Helper: counts occurrences of each die face
+  private getCounts(dice: number[]): Record<number, number> {
+    return dice.reduce((acc, die) => {
+      acc[die] = (acc[die] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
   }
 }
