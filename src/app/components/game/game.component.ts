@@ -142,4 +142,8 @@ export class GameComponent implements OnInit, OnDestroy {
     this.stopRandomizingDice();
     this.dice = this.displayDice;
   }
+
+  calcScore(option:number[]):number {
+    return this.scoringService.calculateScore(option)
+  }
 }

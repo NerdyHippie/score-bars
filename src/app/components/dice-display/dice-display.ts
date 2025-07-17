@@ -9,6 +9,8 @@ import { NgFor } from '@angular/common';
   /*templateUrl: './dice-display.html',
   styleUrl: './dice-display.scss',*/
   template: `
+    <h3>Dice Display</h3>
+    {{dice | json}}
     <div class="dice-container">
       <img
         *ngFor="let die of dice; let i = index"

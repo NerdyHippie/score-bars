@@ -29,7 +29,8 @@
   <div>scoreOpts {{ scoringOptions | json }}</div>
 </div>
 
-<div class="controls">
+<div class="turn-controls">
+  
   <button mat-button (click)="rollDice()" [disabled]="rolling">Roll</button>
   <button mat-button (click)="endTurn()">End Turn</button>
 </div>
@@ -38,7 +39,7 @@
   <h3>Scoring Options</h3>
   <div *ngFor="let option of scoringOptions">
     <button mat-button (click)="bank(option)">
-      {{ option.join(', ') }} ({{ scoringService.calculateScore(option) }})
+      {{ option.join(', ') }} ({{ calcScore(option) }})
     </button>
   </div>
 </div>
