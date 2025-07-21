@@ -11,6 +11,7 @@ import { DiceService } from '../../services/dice.service';
 import { ScoringService } from '../../services/scoring.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import {ScoreOption} from '../../interfaces/score-option';
 
 @Component({
   selector: 'app-game',
@@ -45,9 +46,9 @@ export class GameComponent implements OnInit, OnDestroy {
   hasRolled = false;
 
   turnScore = 0;
-  scoringOptions: { label: string, score: number, dice: number[] }[] = [];
+  scoringOptions: ScoreOption[] = [];
   bankedDice: number[] = [];
-  bankedThisTurn: { label: string, score: number, dice: number[] }[] = [];
+  bankedThisTurn: ScoreOption[] = [];
   noScoreMessage = false;
   allDiceScoredMessage = false;
 
@@ -204,7 +205,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.scoringOptions = this.scoringService.getScoringOptions(this.dice);
   }
 
-  bank(option: { label: string, score: number, dice: number[] }) {
+  bank(option: ScoreOption) {
     if (this.gameOver || !this.myTurn || this.bankedDice.length + option.dice.length > 6) return;
 
     this.turnScore += option.score;
