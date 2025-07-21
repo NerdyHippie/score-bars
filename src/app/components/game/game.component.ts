@@ -47,7 +47,7 @@ export class GameComponent implements OnInit, OnDestroy {
   turnScore = 0;
   scoringOptions: { label: string, score: number, dice: number[] }[] = [];
   bankedDice: number[] = [];
-  bankedThisTurn: string[] = [];
+  bankedThisTurn: { label: string, score: number, dice: number[] }[] = [];
   noScoreMessage = false;
   allDiceScoredMessage = false;
 
@@ -58,6 +58,8 @@ export class GameComponent implements OnInit, OnDestroy {
   winnerName: string = '';
 
   private bankedSinceLastRoll = false;
+  displayDice: number[] = []; // used for randomized visuals
+  private randomizeInterval: any = null;
 
   ngOnInit() {
     this.gameOver = false;
@@ -92,10 +94,18 @@ export class GameComponent implements OnInit, OnDestroy {
         } else {
           this.dice = this.diceService.getWaitingDice();
         }
-
       }
+      this.displayDice = [...this.dice];
     });
   }
+
+  getDieImage(value: number): string {
+    const dieNum: number | string = (value === 0) ? "ready" : (value === 9) ? "wait" : value;
+    return `assets/images/die-${dieNum}.svg`;
+  }
+
+
+
 
   ngOnDestroy() {
     this.gameSub?.unsubscribe();
@@ -154,10 +164,15 @@ export class GameComponent implements OnInit, OnDestroy {
     this.allDiceScoredMessage = false;
     this.bankedSinceLastRoll = false;
 
+    this.startRandomizingDice();
+
     setTimeout(() => {
+      this.stopRandomizingDice();
       this.dice = newRoll;
+      this.displayDice = [...newRoll];
       this.rolling = false;
       this.calculateScoringOptions();
+
       if (this.myTurn && this.gameMode === 'remote') {
         updateDoc(doc(this.firestore, `games/${this.gameId}`), {
           activeDice: this.dice,
@@ -171,6 +186,18 @@ export class GameComponent implements OnInit, OnDestroy {
       }
     }, 800);
   }
+
+  startRandomizingDice() {
+    this.randomizeInterval = setInterval(() => {
+      this.displayDice = this.dice.map(() => Math.floor(Math.random() * 6) + 1);
+    }, 75);
+  }
+
+  stopRandomizingDice() {
+    clearInterval(this.randomizeInterval);
+    this.randomizeInterval = null;
+  }
+
 
   calculateScoringOptions() {
     console.log(`[calculateScoringOptions] dice: ${this.dice}`);
@@ -195,7 +222,7 @@ export class GameComponent implements OnInit, OnDestroy {
     console.log(`[bank] scoringOptions: ${JSON.stringify(this.scoringOptions)}`);
 
     if (this.myTurn && this.gameMode === 'remote') {
-      this.bankedThisTurn.push(option.dice.join('|'))
+      this.bankedThisTurn.push(option)
       console.log(`[bank] bankedThisTurn: ${this.bankedThisTurn}`)
       updateDoc(doc(this.firestore, `games/${this.gameId}`), {
         activeDice: this.dice,
