@@ -12,8 +12,13 @@ export class DiceService {
     return Array(count).fill(0).map(() => this.rollDie());
   }
 
-  rollAllDice(): number[] {
+  /*rollAllDice(): number[] {
     return this.rollDice(6);
+  }*/
+
+  getDieImage(value: number) {
+    const dieNum: number | string = (value === 0) ? "ready" : (value === 9) ? "wait" : value;
+    return `assets/images/die-${dieNum}.svg`;
   }
 
   getReadyDice(): number[] {

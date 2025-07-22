@@ -1,1 +1,1 @@
-{"version":3,"sourceRoot":"","sources":[],"names":[],"mappings":"","file":"dice-display.css"}
+{"version":3,"sourceRoot":"","sources":["dice-display.scss"],"names":[],"mappings":"AACA;EACE;EACA;EACA;EACA;EACA;EACA;;AAEA;EACE;EACA;EACA;EACA;;AAEA;EACE;;AAIJ;EAnBF;IAoBI;;EAEA;IACE;IACA;;;;AAKN;EACE;IACE;;EAEF;IACE;;EAEF;IACE;;EAEF;IACE;;EAEF;IACE","file":"dice-display.css"}

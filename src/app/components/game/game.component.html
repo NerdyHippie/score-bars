@@ -17,15 +17,7 @@
   </mat-chip-set>
 </div>
 
-<div class="dice-container">
-  <img
-    *ngFor="let die of displayDice"
-    class="die-image"
-    [class.rolling]="gameState.rolling"
-    [src]="getDieImage(die)"
-    alt="die"
-  />
-</div>
+<app-dice-display [dice]="gameState.dice" [rolling]="gameState.rolling" />
 
 <!--<div class="score-options game-messages debug-container">
   <div>dice {{gameState.dice | json}}</div>

@@ -14,13 +14,14 @@ import { Subscription } from 'rxjs';
 import {ScoreOption} from '../../interfaces/score-option';
 import {GameState} from '../../interfaces/game-state';
 import {Player} from '../../interfaces/player';
+import {DiceDisplay} from '../dice-display/dice-display';
 
 @Component({
   selector: 'app-game',
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay],
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {
@@ -61,33 +62,7 @@ export class GameComponent implements OnInit, OnDestroy {
     bankedSinceLastRoll: true,
   }
 
-  /*gameId: string = '';
-  gameMode: string = '';
-  players: Player[] = [];
-  scores: number[] = [];
-  currentPlayerIndex: number = 0;
-  currentPlayerId: string = '';
-
-  dice: number[] = [];
-  rolling = false;
-  hasRolled = false;
-
-  turnScore = 0;
-  scoringOptions: ScoreOption[] = [];
-  bankedDice: number[] = [];
-  bankedThisTurn: ScoreOption[] = [];
-  noScoreMessage = false;
-  allDiceScoredMessage = false;
-
-  finalRound = false;
-  finalRoundStarterIndex: number | null = null;
-  eliminatedPlayers: Set<number> = new Set();
-  gameOver = false;
-  winnerName: string = '';
-
-  private bankedSinceLastRoll = false;*/
   displayDice: number[] = []; // used for randomized visuals
-  private randomizeInterval: any = null;
 
   ngOnInit() {
     this.gameState.gameOver = false;
@@ -103,6 +78,7 @@ export class GameComponent implements OnInit, OnDestroy {
       }
 
       this.updateGameState(data);
+
       this.myTurn = this.gameState.gameMode === 'local' || this.gameState.currentPlayerId === this.myPlayerId;
 
 
@@ -116,7 +92,7 @@ export class GameComponent implements OnInit, OnDestroy {
           this.gameState.dice = this.diceService.getWaitingDice();
         }
       }
-      this.displayDice = [...this.gameState.dice];
+      // this.displayDice = [...this.gameState.dice];
     });
   }
 
@@ -136,10 +112,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameState.scoringOptions = data.activeScoringOptions || [];
   }
 
-  getDieImage(value: number): string {
-    const dieNum: number | string = (value === 0) ? "ready" : (value === 9) ? "wait" : value;
-    return `assets/images/die-${dieNum}.svg`;
-  }
 
 
 
@@ -150,6 +122,9 @@ export class GameComponent implements OnInit, OnDestroy {
   getDebugData(): string {
 
     return JSON.stringify(this.gameState);
+  }
+  getDieImage(value: number) {
+    return this.diceService.getDieImage(value);
   }
   goHome() {
     this.router.navigate(['/home']);
@@ -192,10 +167,10 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameState.allDiceScoredMessage = false;
     this.gameState.bankedSinceLastRoll = false;
 
-    this.startRandomizingDice();
+    // this.startRandomizingDice();
 
     setTimeout(() => {
-      this.stopRandomizingDice();
+      // this.stopRandomizingDice();
       this.gameState.dice = newRoll;
       this.displayDice = [...newRoll];
       this.gameState.rolling = false;
@@ -215,16 +190,7 @@ export class GameComponent implements OnInit, OnDestroy {
     }, 800);
   }
 
-  startRandomizingDice() {
-    this.randomizeInterval = setInterval(() => {
-      this.displayDice = this.gameState.dice.map(() => Math.floor(Math.random() * 6) + 1);
-    }, 75);
-  }
 
-  stopRandomizingDice() {
-    clearInterval(this.randomizeInterval);
-    this.randomizeInterval = null;
-  }
 
 
   calculateScoringOptions() {

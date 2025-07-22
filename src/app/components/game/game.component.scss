@@ -55,53 +55,6 @@
   }
 }
 
-.dice-container {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-
-  .die-image {
-    width: 60px;
-    height: 60px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    transition: transform 0.8s ease-in-out;
-
-    &.rolling {
-      animation: rollDice 0.8s ease-in-out;
-    }
-  }
-
-  @media (max-width: 600px) {
-    gap: 0.5rem;
-
-    .die-image {
-      width: 50px;
-      height: 50px;
-    }
-  }
-}
-
-@keyframes rollDice {
-  0% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(90deg);
-  }
-  50% {
-    transform: rotate(180deg);
-  }
-  75% {
-    transform: rotate(270deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .turn-controls {
   display: flex;
   justify-content: center;
