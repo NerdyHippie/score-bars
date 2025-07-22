@@ -12,6 +12,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import {AuthService} from '../../services/auth.service';
+import {Player} from '../../interfaces/player';
 
 @Component({
   selector: 'app-new-game',
@@ -28,8 +29,8 @@ export class NewGameComponent implements OnInit {
   mode: 'remote' | 'local' | 'solo' | null = null;
   playerName: string = '';
   gameId: string = '';
-  players: { name: string, uid: string }[] = [ { name: 'Player 1', uid: '1' }, { name: 'Player 2', uid: '2' } ];
-  joinedPlayers: { name: string, uid: string, }[] = [];
+  players: Player[] = [ { name: 'Player 1', uid: '1', score: 0, eliminated: false }, { name: 'Player 2', uid: '2', score: 0, eliminated: false } ];
+  joinedPlayers: Player[] = [];
   shareLink: string = '';
 
   private route = inject(ActivatedRoute);
@@ -47,7 +48,7 @@ export class NewGameComponent implements OnInit {
 
       const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
       setDoc(lobbyRef, {
-        players: [{ name: this.playerName, uid: this.authService.getCurrentUserId() }],
+        players: [{ name: this.playerName, uid: this.authService.getCurrentUserId(), score: 0, eliminated: false }],
         createdAt: serverTimestamp(),
         mode: 'remote'
       });
@@ -58,13 +59,13 @@ export class NewGameComponent implements OnInit {
         this.joinedPlayers = data?.['players'] ?? [];
       });
     } else if (this.mode === 'solo') {
-      this.players = [{ name: this.playerName, uid: this.authService.getCurrentUserId() }];
+      this.players = [{ name: this.playerName, uid: this.authService.getCurrentUserId(), score: 0, eliminated: false }];
     }
   }
 
   addPlayerField() {
     const newPlayerNum = this.players.length + 1;
-    this.players.push({ name: `Player ${newPlayerNum}`, uid: `${newPlayerNum}` });
+    this.players.push({ name: `Player ${newPlayerNum}`, uid: `${newPlayerNum}`, score: 0, eliminated: false });
     setTimeout(() => {
       const inputs = this.playerInputs.toArray();
       const lastInput = inputs[inputs.length - 1];

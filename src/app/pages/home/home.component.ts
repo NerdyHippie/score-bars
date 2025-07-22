@@ -11,14 +11,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NewGameModalComponent } from '../../components/new-game-modal/new-game-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Game } from '../../interfaces/game';
 
-interface Game {
-  id: string;
-  players: { name: string }[];
-  scores?: number[];
-  createdAt: any;
-  gameIsFinished?: boolean;
-}
 
 @Component({
   selector: 'app-home',
@@ -63,7 +57,7 @@ export class HomeComponent implements OnInit {
   }
 
   getPlayerInfo(game: Game): string {
-    return game.players?.map((p, i) => `${p.name} (${game.scores?.[i] ?? 0})`).join(', ') || '';
+    return game.players?.map((p, i) => `${p.name} (${p.score})`).join(', ') || '';
   }
 
   getStartDate(game: Game): string {

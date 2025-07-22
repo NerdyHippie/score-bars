@@ -11,6 +11,7 @@ import {
 import { Auth, signInAnonymously } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import {Player} from '../../interfaces/player';
 
 @Component({
   selector: 'app-join-game',
@@ -62,7 +63,7 @@ export class JoinGameComponent implements OnInit {
 
     try {
       const signInData = await signInAnonymously(this.auth);
-      
+
 
       const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
       const lobbySnap = await getDoc(lobbyRef);
@@ -74,8 +75,9 @@ export class JoinGameComponent implements OnInit {
       const nameTaken = existing.some((p: any) => p.name.toLowerCase() === this.playerName.toLowerCase());
       if (nameTaken) throw new Error('That name is already taken.');
 
+      const playerData: Player = { name: this.playerName, uid: signInData?.user?.uid, score: 0, eliminated: false }
       await updateDoc(lobbyRef, {
-        players: arrayUnion({ name: this.playerName, uid: signInData?.user?.uid })
+        players: arrayUnion(playerData)
       });
     } catch (err: any) {
       console.error('[JoinGame] Error in markReady:', err);

@@ -12,7 +12,7 @@
       [class.current-player]="i === gameState.currentPlayerIndex"
       [class.enlarged]="gameState.gameMode === 'local' && i === gameState.currentPlayerIndex || gameState.gameMode === 'remote' && player.uid === myPlayerId"
       [class.eliminated-player]="player.eliminated">
-      {{ player.name }} | {{ gameState.scores[i] }}
+      {{ player.name }} | {{ player.score }}
     </mat-chip>
   </mat-chip-set>
 </div>

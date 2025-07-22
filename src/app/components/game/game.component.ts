@@ -122,7 +122,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   updateGameState(data: any) {
     this.gameState.players = data.players;
-    this.gameState.scores = data.scores || Array(this.gameState.players.length).fill(0);
+    // this.gameState.scores = data.scores || Array(this.gameState.players.length).fill(0);
     this.gameState.currentPlayerIndex = data.currentPlayerIndex ?? 0;
     this.gameState.currentPlayerId = data.currentPlayerId ?? 'not set';
     this.gameState.finalRound = data.finalRound || false;
@@ -295,10 +295,10 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.gameState.gameOver || !this.myTurn || (this.gameState.turnScore === 0 && this.gameState.scoringOptions.length > 0)) return;
 
     const player = this.gameState.players[this.gameState.currentPlayerIndex];
-    const shouldScore = this.gameState.scores[this.gameState.currentPlayerIndex] > 0 || this.gameState.turnScore >= this.ENTRY_THRESHOLD;
+    const shouldScore = player.score > 0 || this.gameState.turnScore >= this.ENTRY_THRESHOLD;
     const appliedScore = shouldScore ? this.gameState.turnScore : 0;
 
-    this.gameState.scores[this.gameState.currentPlayerIndex] += appliedScore;
+    player.score += appliedScore;
 
     const turnData = {
       player: player.name,
@@ -310,13 +310,13 @@ export class GameComponent implements OnInit, OnDestroy {
 
     const gameRef = doc(this.firestore, `games/${this.gameState.gameId}`);
     const gameUpdate: any = {
-      scores: this.gameState.scores,
+      players: this.gameState.players,
       turns: arrayUnion(turnData),
       lastPlayer: this.gameState.currentPlayerIndex,
       activeBankedDice: this.gameState.bankedThisTurn
     };
 
-    if (!this.gameState.finalRound && this.gameState.scores[this.gameState.currentPlayerIndex] >= this.TARGET_SCORE) {
+    if (!this.gameState.finalRound && player.score >= this.TARGET_SCORE) {
       this.gameState.finalRound = true;
       this.gameState.finalRoundStarterIndex = this.gameState.currentPlayerIndex;
     } else if (this.gameState.finalRound) {
@@ -325,8 +325,13 @@ export class GameComponent implements OnInit, OnDestroy {
       const lastIndexInRound = (this.gameState.finalRoundStarterIndex! + totalPlayers - 1) % totalPlayers;
       const justFinishedLastFinalTurn = this.gameState.currentPlayerIndex === lastIndexInRound;
 
-      const highestScore = Math.max(...this.gameState.scores);
-      const myScore = this.gameState.scores[this.gameState.currentPlayerIndex];
+
+      // TODO: Figure out how to calculate highestScore based on player.score
+      // const highestScore = Math.max(...this.gameState.scores);
+      const highestScore = Math.max(...this.gameState.players.map(p => p.score))
+      console.log(`Highest score: ${highestScore}`);
+
+      const myScore = this.gameState.players[this.gameState.currentPlayerIndex].score;
 
       if (myScore < highestScore) {
         player.eliminated = true;
