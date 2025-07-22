@@ -85,25 +85,7 @@
   </button>
 </div>
 
+<app-banked-dice-display [bankedThisTurn]="gameState.bankedThisTurn" />
 
-<div class="score-options game-messages">
-  <div class="banked-display" *ngIf="gameState.bankedThisTurn.length > 0">
-    <h4>Banked This Turn:</h4>
-    <div class="scoring-list">
-      <div
-        *ngFor="let option of gameState.bankedThisTurn"
-        class="scoring-option disabled">
-        <div class="dice-row">
-          <img
-            *ngFor="let val of option.dice"
-            [src]="getDieImage(val)"
-            alt="die"
-            class="scoring-die" />
-        </div>
-        <div class="score-label">{{ option.score }}</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <pre class="debug-container" [innerHTML]="getDebugData() | prettyjson: [false, 4]"></pre>

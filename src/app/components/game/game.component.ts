@@ -15,13 +15,14 @@ import {ScoreOption} from '../../interfaces/score-option';
 import {GameState} from '../../interfaces/game-state';
 import {Player} from '../../interfaces/player';
 import {DiceDisplay} from '../dice-display/dice-display';
+import {BankedDiceDisplay} from '../banked-dice-display/banked-dice-display';
 
 @Component({
   selector: 'app-game',
   standalone: true,
   templateUrl: './game.component.html',
-  styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay],
+  styleUrls: ['./game.component.scss', '../../shared-styles/sharedStyles.scss'],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay, BankedDiceDisplay],
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {

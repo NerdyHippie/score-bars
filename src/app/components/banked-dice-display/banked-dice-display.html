@@ -1,0 +1,19 @@
+<div class="score-options game-messages">
+  <div class="banked-display" *ngIf="bankedThisTurn.length > 0">
+    <h4>Banked This Turn:</h4>
+    <div class="scoring-list">
+      <div
+        *ngFor="let option of bankedThisTurn"
+        class="scoring-option disabled">
+        <div class="dice-row">
+          <img
+            *ngFor="let val of option.dice"
+            [src]="getDieImage(val)"
+            alt="die"
+            class="scoring-die" />
+        </div>
+        <div class="score-label">{{ option.score }}</div>
+      </div>
+    </div>
+  </div>
+</div>
