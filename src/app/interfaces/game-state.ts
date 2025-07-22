@@ -9,8 +9,6 @@ export interface GameState {
   scores: number[],
   currentPlayerIndex: number,
   currentPlayerId: string,
-  myPlayerId: string,
-  myTurn: boolean,
 
   dice: number[],
   rolling: boolean,
@@ -19,7 +17,7 @@ export interface GameState {
   turnScore: number,
   scoringOptions: ScoreOption[],
   bankedDice: number[],
-  bankedThisTurn: string[],
+  bankedThisTurn: ScoreOption[],
   noScoreMessage: string | boolean,
   allDiceScoredMessage: string | boolean,
 

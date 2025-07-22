@@ -8,11 +8,11 @@
 <div class="players">
   <mat-chip-set>
     <mat-chip
-      *ngFor="let player of players; let i = index"
-      [class.current-player]="i === currentPlayerIndex"
-      [class.enlarged]="gameMode === 'local' && i === currentPlayerIndex || gameMode === 'remote' && player.uid === myPlayerId"
+      *ngFor="let player of gameState.players; let i = index"
+      [class.current-player]="i === gameState.currentPlayerIndex"
+      [class.enlarged]="gameState.gameMode === 'local' && i === gameState.currentPlayerIndex || gameState.gameMode === 'remote' && player.uid === myPlayerId"
       [class.eliminated-player]="player.eliminated">
-      {{ player.name }} | {{ scores[i] }}
+      {{ player.name }} | {{ gameState.scores[i] }}
     </mat-chip>
   </mat-chip-set>
 </div>
@@ -21,25 +21,25 @@
   <img
     *ngFor="let die of displayDice"
     class="die-image"
-    [class.rolling]="rolling"
+    [class.rolling]="gameState.rolling"
     [src]="getDieImage(die)"
     alt="die"
   />
 </div>
 
-<div class="score-options game-messages debug-container">
-  <div>dice {{dice | json}}</div>
-  <div>bankedThisTurn {{bankedThisTurn | json}}</div>
-  <div>bankedDice {{bankedDice | json}}</div>
-  <div>scoreOpts {{scoringOptions | json}}</div>
-</div>
+<!--<div class="score-options game-messages debug-container">
+  <div>dice {{gameState.dice | json}}</div>
+  <div>bankedThisTurn {{gameState.bankedThisTurn | json}}</div>
+  <div>bankedDice {{gameState.bankedDice | json}}</div>
+  <div>scoreOpts {{gameState.scoringOptions | json}}</div>
+</div>-->
 
 
 <div class="score-options game-messages">
-  <ng-container *ngIf="scoringOptions.length > 0">
+  <ng-container *ngIf="gameState.scoringOptions.length > 0">
     <div class="scoring-list">
       <div
-        *ngFor="let option of scoringOptions"
+        *ngFor="let option of gameState.scoringOptions"
         class="scoring-option"
         (click)="bank(option)">
         <div class="dice-row">
@@ -54,52 +54,52 @@
     </div>
   </ng-container>
 
-  <div class="message warning" *ngIf="noScoreMessage">
+  <div class="message warning" *ngIf="gameState.noScoreMessage">
     No dice have scored. You must end your turn.
   </div>
 
-  <div class="message success" *ngIf="allDiceScoredMessage">
+  <div class="message success" *ngIf="gameState.allDiceScoredMessage">
     All dice scored. You may roll again.
   </div>
 
-  <div class="message info" *ngIf="finalRound && !gameOver">
+  <div class="message info" *ngIf="gameState.finalRound && !gameState.gameOver">
     Final round has begun! Beat the top score or be eliminated.
   </div>
 
-  <div class="message endgame" *ngIf="gameOver">
-    Game over! {{ winnerName }} wins!
+  <div class="message endgame" *ngIf="gameState.gameOver">
+    Game over! {{ gameState.winnerName }} wins!
   </div>
 
 </div>
 
 
 <div class="turn-controls">
-  <span class="turn-score">Current Turn: {{ turnScore }}</span>
+  <span class="turn-score">Current Turn: {{ gameState.turnScore }}</span>
 
   <button
     mat-raised-button
     color="primary"
     (click)="rollDice()"
-    [disabled]="!myTurn || rolling || noScoreMessage || gameOver || (hasRolled && bankedDice.length === 0 && !allDiceScoredMessage)">
-    {{ hasRolled ? 'Roll Again' : 'Roll' }}
+    [disabled]="!myTurn || gameState.rolling || gameState.noScoreMessage || gameState.gameOver || (gameState.hasRolled && gameState.bankedDice.length === 0 && !gameState.allDiceScoredMessage)">
+    {{ gameState.hasRolled ? 'Roll Again' : 'Roll' }}
   </button>
 
   <button
     mat-raised-button
     color="accent"
     (click)="endTurn()"
-    [disabled]="!myTurn || gameOver">
+    [disabled]="!myTurn || gameState.gameOver">
     End Turn
   </button>
 </div>
 
 
 <div class="score-options game-messages">
-  <div class="banked-display" *ngIf="bankedThisTurn.length > 0">
+  <div class="banked-display" *ngIf="gameState.bankedThisTurn.length > 0">
     <h4>Banked This Turn:</h4>
     <div class="scoring-list">
       <div
-        *ngFor="let option of bankedThisTurn"
+        *ngFor="let option of gameState.bankedThisTurn"
         class="scoring-option disabled">
         <div class="dice-row">
           <img
