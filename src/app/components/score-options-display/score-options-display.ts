@@ -5,6 +5,7 @@ import {GameState} from '../../interfaces/game-state';
 import {CommonModule} from '@angular/common';
 import {ScoreOption} from '../../interfaces/score-option';
 import {doc, Firestore, updateDoc} from '@angular/fire/firestore';
+import {GameService} from '../../services/game.service';
 
 @Component({
   selector: 'app-score-options-display',
@@ -16,12 +17,14 @@ import {doc, Firestore, updateDoc} from '@angular/fire/firestore';
 export class ScoreOptionsDisplay {
   private diceService = inject(DiceService);
   private firestore = inject(Firestore);
+  private gameService = inject(GameService);
 
-  @Input() gameState!: GameState
+  //@Input() gameState!: GameState
   @Input() myTurn: boolean = false;
-  @Output() calcScores = new EventEmitter<void>();
-  @Output() diceReset = new EventEmitter<boolean | void>();
+  /*@Output() calcScores = new EventEmitter<void>();
+  @Output() diceReset = new EventEmitter<boolean | void>();*/
 
+  gameState: GameState = this.gameService.gameState
 
   getDieImage(value: number) {
     return this.diceService.getDieImage(value);
@@ -40,7 +43,8 @@ export class ScoreOptionsDisplay {
     console.log(`[bank] dice: ${this.gameState.dice}`);
     console.log(`[bank] bankedDice: ${this.gameState.bankedDice}`);
 
-    this.calcScores.emit(); // this.calculateScoringOptions();
+    this.gameService.calculateScoringOptions();
+    // this.calcScores.emit(); // this.calculateScoringOptions();
 
     console.log(`[bank] scoringOptions: ${JSON.stringify(this.gameState.scoringOptions)}`);
 
@@ -56,7 +60,7 @@ export class ScoreOptionsDisplay {
 
     if (this.gameState.bankedDice.length === 6) {
       console.log(`[bank] roll again`)
-      this.diceReset.emit(true);  //this.resetDice(true);
+      this.gameService.resetDice(true); // this.diceReset.emit(true);  //this.resetDice(true);
       this.gameState.bankedDice = [];
       this.gameState.allDiceScoredMessage = true;
     }

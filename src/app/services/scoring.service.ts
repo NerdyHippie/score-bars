@@ -6,6 +6,9 @@ import { Injectable } from '@angular/core';
 export class ScoringService {
 
   getScoringOptions(dice: number[]): { label: string, score: number, dice: number[] }[] {
+
+    console.log(`[ScoringService] firing getScoringOptions() dice: ${dice}`);
+
     const options: { label: string, score: number, dice: number[] }[] = [];
     const counts = Array(7).fill(0);
     dice.forEach(d => counts[d]++);

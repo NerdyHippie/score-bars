@@ -26,7 +26,7 @@
   <div>scoreOpts {{gameState.scoringOptions | json}}</div>
 </div>-->
 
-<app-score-options-display [gameState]="gameState" [myTurn]="myTurn" (calcScores)="calculateScoringOptions()" (diceReset)="resetDice()" />
+<app-score-options-display [myTurn]="myTurn" />
 
 <div class="turn-controls">
   <span class="turn-score">Current Turn: {{ gameState.turnScore }}</span>
