@@ -17,6 +17,7 @@ import {Player} from '../../interfaces/player';
 import {DiceDisplay} from '../dice-display/dice-display';
 import {BankedDiceDisplay} from '../banked-dice-display/banked-dice-display';
 import {ScoreOptionsDisplay} from '../score-options-display/score-options-display';
+import {GameService} from '../../services/game.service';
 
 @Component({
   selector: 'app-game',
@@ -35,34 +36,14 @@ export class GameComponent implements OnInit, OnDestroy {
   private diceService = inject(DiceService);
   private scoringService = inject(ScoringService);
   private authService = inject(AuthService);
+  private gameService = inject(GameService)
 
   gameSub!: Subscription;
 
   myPlayerId: string = '';
   myTurn = true;
 
-  gameState: GameState = {
-    gameId: '',
-    gameMode: '',
-    players: [],
-    scores: [],
-    currentPlayerId: '',
-    currentPlayerIndex: 0,
-    dice: [],
-    rolling: false,
-    hasRolled: false,
-    turnScore: 0,
-    scoringOptions: [],
-    bankedDice: [],
-    bankedThisTurn: [],
-    noScoreMessage: false,
-    allDiceScoredMessage: false,
-    finalRound: false,
-    finalRoundStarterIndex: 0,
-    gameOver: false,
-    winnerName: '',
-    bankedSinceLastRoll: true,
-  }
+  gameState: GameState = this.gameService.gameState
 
   displayDice: number[] = []; // used for randomized visuals
 
@@ -130,23 +111,13 @@ export class GameComponent implements OnInit, OnDestroy {
     this.router.navigate(['/home']);
   }
   getActivePlayerName() {
-    return this.gameState.players[this.gameState.currentPlayerIndex]?.name || 'error'
+    return this.gameService.getActivePlayerName()
   }
 
 
 
   resetDice(reroll: boolean = false) {
-    console.log(`[game] firing resetDice().  Reroll: ${reroll}`);
-    this.gameState.dice = this.diceService.getReadyDice();
-    if (!reroll) {
-      this.gameState.bankedDice = [];
-      this.gameState.turnScore = 0;
-      this.gameState.hasRolled = false;
-      this.gameState.allDiceScoredMessage = false;
-    }
-    this.gameState.scoringOptions = [];
-    this.gameState.noScoreMessage = false;
-    this.gameState.bankedSinceLastRoll = false;
+    this.gameService.resetDice(reroll);
   }
 
   isRollAgainBlocked(): boolean {
@@ -197,8 +168,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
 
   calculateScoringOptions() {
-    console.log(`[calculateScoringOptions] dice: ${this.gameState.dice}`);
-    this.gameState.scoringOptions = this.scoringService.getScoringOptions(this.gameState.dice);
+    this.gameService.calculateScoringOptions();
   }
 
 
