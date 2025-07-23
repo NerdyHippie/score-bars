@@ -16,13 +16,14 @@ import {GameState} from '../../interfaces/game-state';
 import {Player} from '../../interfaces/player';
 import {DiceDisplay} from '../dice-display/dice-display';
 import {BankedDiceDisplay} from '../banked-dice-display/banked-dice-display';
+import {ScoreOptionsDisplay} from '../score-options-display/score-options-display';
 
 @Component({
   selector: 'app-game',
   standalone: true,
   templateUrl: './game.component.html',
-  styleUrls: ['./game.component.scss', '../../shared-styles/sharedStyles.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay, BankedDiceDisplay],
+  styleUrls: ['./game.component.scss'],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay, BankedDiceDisplay, ScoreOptionsDisplay],
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {
@@ -65,6 +66,9 @@ export class GameComponent implements OnInit, OnDestroy {
 
   displayDice: number[] = []; // used for randomized visuals
 
+  //  BUG:  When all 6 dice are rolled, the turnScore is reset to 0 when last choice is banked
+
+
   ngOnInit() {
     this.gameState.gameOver = false;
     this.gameState.winnerName = '';
@@ -82,14 +86,12 @@ export class GameComponent implements OnInit, OnDestroy {
 
       this.myTurn = this.gameState.gameMode === 'local' || this.gameState.currentPlayerId === this.myPlayerId;
 
-
+      console.log(`[game] hasRolled: ${this.gameState.hasRolled}`);
+      console.log(`[game] myTurn: ${this.myTurn}`);
       if (!this.gameState.hasRolled) {
         if (this.myTurn) {
           this.resetDice();
         } else {
-
-          // TODO: Need to make sure we're not over-writing correct dice values here
-
           this.gameState.dice = this.diceService.getWaitingDice();
         }
       }
@@ -124,9 +126,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
     return JSON.stringify(this.gameState);
   }
-  getDieImage(value: number) {
-    return this.diceService.getDieImage(value);
-  }
   goHome() {
     this.router.navigate(['/home']);
   }
@@ -137,6 +136,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
 
   resetDice(reroll: boolean = false) {
+    console.log(`[game] firing resetDice().  Reroll: ${reroll}`);
     this.gameState.dice = this.diceService.getReadyDice();
     if (!reroll) {
       this.gameState.bankedDice = [];
@@ -170,8 +170,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
     // this.startRandomizingDice();
 
+    console.log(`[game] start rolling`);
     setTimeout(() => {
       // this.stopRandomizingDice();
+      console.log(`[game] stop rolling ${JSON.stringify(newRoll)}`);
       this.gameState.dice = newRoll;
       this.displayDice = [...newRoll];
       this.gameState.rolling = false;
@@ -199,49 +201,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameState.scoringOptions = this.scoringService.getScoringOptions(this.gameState.dice);
   }
 
-  persistGameState() {
-    console.log('[persistGameState] saving dice, bankedDice, scoringOptions');
-    updateDoc(doc(this.firestore, `games/${this.gameState.gameId}`), {
-      activeDice: this.gameState.dice,
-      activeBankedDice: this.gameState.bankedThisTurn,
-      activeScoringOptions: this.gameState.scoringOptions
-    });
-  }
 
-  bank(option: ScoreOption) {
-    if (this.gameState.gameOver || !this.myTurn || this.gameState.bankedDice.length + option.dice.length > 6) return;
-
-    this.gameState.turnScore += option.score;
-    console.log(`[bank] turnScore: ${this.gameState.turnScore} (${option.dice})`);
-    option.dice.forEach(val => {
-      const index = this.gameState.dice.indexOf(val);
-      if (index > -1) this.gameState.dice.splice(index, 1);
-      this.gameState.bankedDice.push(val);
-    });
-    console.log(`[bank] dice: ${this.gameState.dice}`);
-    console.log(`[bank] bankedDice: ${this.gameState.bankedDice}`);
-
-    this.calculateScoringOptions();
-
-    console.log(`[bank] scoringOptions: ${JSON.stringify(this.gameState.scoringOptions)}`);
-
-    if (this.myTurn) {
-      this.gameState.bankedThisTurn.push(option)
-      console.log(`[bank] bankedThisTurn: ${this.gameState.bankedThisTurn}`)
-
-      if (this.gameState.gameMode === 'remote') {
-        this.persistGameState();
-      }
-    }
-    this.gameState.bankedSinceLastRoll = true;
-
-    if (this.gameState.bankedDice.length === 6) {
-      console.log(`[bank] roll again`)
-      this.resetDice(true);
-      this.gameState.bankedDice = [];
-      this.gameState.allDiceScoredMessage = true;
-    }
-  }
 
   getNextPlayer(): { nextIndex: number, nextPlayer: Player} {
     const playerCount = this.gameState.players.length;

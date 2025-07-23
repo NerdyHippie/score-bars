@@ -1,12 +1,13 @@
 import {Component, inject, Input, SimpleChanges} from '@angular/core';
 import { GameState } from '../../interfaces/game-state';
-import {NgForOf} from '@angular/common';
+import {JsonPipe, NgForOf} from '@angular/common';
 import {DiceService} from '../../services/dice.service';
 
 @Component({
   selector: 'app-dice-display',
   imports: [
-    NgForOf
+    NgForOf,
+    JsonPipe
   ],
   standalone: true,
   templateUrl: './dice-display.html',
@@ -33,15 +34,9 @@ export class DiceDisplay {
       }
     }
 
-    /*if (changes['gameState']) {
-      console.log(`[ngOnChanges] previous dice: ${changes['gameState'].previousValue}`)
-      console.log(`[ngOnChanges] current dice: ${changes['gameState'].currentValue.dice}`, [...changes['gameState'].currentValue.dice]);
-      if (changes['gameState'].currentValue['dice'] !== changes['gameState'].previousValue?.dice) {
-        this.displayDice = this.gameState.dice;
-        console.log('[ngOnChanges] dice were changed', this.displayDice)
-        console.log('[ngOnChanges] dice were changed', this.displayDice)
-      }
-    }*/
+    if (changes['dice']) {
+      this.displayDice = changes['dice'].currentValue;
+    }
   }
 
   getDieImage(value: number) {

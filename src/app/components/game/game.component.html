@@ -19,51 +19,14 @@
 
 <app-dice-display [dice]="gameState.dice" [rolling]="gameState.rolling" />
 
-<!--<div class="score-options game-messages debug-container">
+<!--<div class="score-options-display game-messages debug-container">
   <div>dice {{gameState.dice | json}}</div>
   <div>bankedThisTurn {{gameState.bankedThisTurn | json}}</div>
   <div>bankedDice {{gameState.bankedDice | json}}</div>
   <div>scoreOpts {{gameState.scoringOptions | json}}</div>
 </div>-->
 
-
-<div class="score-options game-messages">
-  <ng-container *ngIf="gameState.scoringOptions.length > 0">
-    <div class="scoring-list">
-      <div
-        *ngFor="let option of gameState.scoringOptions"
-        class="scoring-option"
-        (click)="bank(option)">
-        <div class="dice-row">
-          <img
-            *ngFor="let val of option.dice"
-            [src]="getDieImage(val)"
-            alt="die"
-            class="scoring-die" />
-        </div>
-        <div class="score-label">{{ option.score }}</div>
-      </div>
-    </div>
-  </ng-container>
-
-  <div class="message warning" *ngIf="gameState.noScoreMessage">
-    No dice have scored. You must end your turn.
-  </div>
-
-  <div class="message success" *ngIf="gameState.allDiceScoredMessage">
-    All dice scored. You may roll again.
-  </div>
-
-  <div class="message info" *ngIf="gameState.finalRound && !gameState.gameOver">
-    Final round has begun! Beat the top score or be eliminated.
-  </div>
-
-  <div class="message endgame" *ngIf="gameState.gameOver">
-    Game over! {{ gameState.winnerName }} wins!
-  </div>
-
-</div>
-
+<app-score-options-display [gameState]="gameState" [myTurn]="myTurn" (calcScores)="calculateScoringOptions()" (diceReset)="resetDice()" />
 
 <div class="turn-controls">
   <span class="turn-score">Current Turn: {{ gameState.turnScore }}</span>

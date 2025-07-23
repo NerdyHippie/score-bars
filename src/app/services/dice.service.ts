@@ -22,10 +22,12 @@ export class DiceService {
   }
 
   getReadyDice(): number[] {
+    console.log(`[DiceService] getting Ready dice`);
     return Array(6).fill(0); // 0 means "ready" state
   }
 
   getWaitingDice(): number[] {
+    console.log(`[DiceService] getting Wait dice`);
     return Array(6).fill(9);
 
   }
