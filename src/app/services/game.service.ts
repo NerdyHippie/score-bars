@@ -40,8 +40,8 @@ export class GameService {
   }
 
   resetDice(reroll: boolean = false) {
-    console.log(`[GameService] firing resetDice().  Reroll: ${reroll}`);
     this.gameState.dice = this.diceService.getReadyDice();
+    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(this.gameState.dice)}`);
     if (!reroll) {
       this.gameState.bankedDice = [];
       this.gameState.turnScore = 0;

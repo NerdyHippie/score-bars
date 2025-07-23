@@ -5,13 +5,14 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
-import { Observable } from 'rxjs';
+import { Observable, of, switchMap, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NewGameModalComponent } from '../../components/new-game-modal/new-game-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Game } from '../../interfaces/game';
+import {AuthService} from '../../services/auth.service';
 
 
 @Component({
@@ -33,14 +34,29 @@ export class HomeComponent implements OnInit {
   games$: Observable<Game[]>;
   private dialog = inject(MatDialog);
 
-  constructor(private firestore: Firestore, private router: Router) {
+  constructor(
+    private firestore: Firestore,
+    private router: Router,
+    private authService: AuthService
+  ) {
     const gamesRef = collection(this.firestore, 'games');
-    this.games$ = collectionData(gamesRef, { idField: 'id' }) as Observable<Game[]>;
+    const allGames$ = collectionData(gamesRef, { idField: 'id' }) as Observable<Game[]>;
+
+    this.games$ = of(this.authService.UserData).pipe(
+      switchMap(user => {
+        if (!user?.uid) return of([]);
+        return allGames$.pipe(
+          map(games => games.filter(game =>
+            game.players?.some(p => p.uid === user.uid)
+          ))
+        );
+      })
+    );
   }
 
   ngOnInit(): void {}
 
-  goToGame(gameId: string) {
+  goToGame(gameId: string): void {
     this.router.navigate(['/game', gameId]);
   }
 

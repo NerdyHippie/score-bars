@@ -1,11 +1,11 @@
 <mat-toolbar color="primary" class="desktop-toolbar">
-  <span>Score Bars</span>
+  <span>Score Bars - welcome {{getUserName()}}</span>
   <span class="spacer"></span>
   <button mat-button *ngIf="authService.UserData" (click)="logout()">Log out</button>
 </mat-toolbar>
 
 <mat-toolbar color="primary" class="mobile-toolbar">
-  <span>Score Bars</span>
+  <span>Score Bars - welcome {{getUserName()}}</span>
   <span class="spacer"></span>
   <mat-menu #menu="matMenu">
     <button mat-menu-item *ngIf="authService.UserData" (click)="logout()">Log out</button>

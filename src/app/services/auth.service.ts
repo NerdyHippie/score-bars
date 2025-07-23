@@ -6,8 +6,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
-  signOut,
-  User, authState
+  signOut, authState, onAuthStateChanged
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -17,16 +16,25 @@ import {
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import {firstValueFrom} from 'rxjs';
+import { UserData } from '../interfaces/user-data';
+
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  public UserData: any = null;
+  public UserData: UserData | null = null;
 
-  constructor(private auth: Auth, private firestore: Firestore, private router: Router) {}
+
+  constructor(private auth: Auth, private firestore: Firestore, private router: Router) {
+    onAuthStateChanged(this.auth, (user) => {
+      console.log('Auth state changed:', user);
+      this.setUserData(user);
+      // optionally emit an event or BehaviorSubject here
+    });
+  }
 
   async login(email: string, password: string) {
     const result = await signInWithEmailAndPassword(this.auth, email, password);
-    this.UserData = result.user;
+    this.setUserData(result.user);
     this.router.navigate(['/home']);
   }
 
@@ -42,7 +50,7 @@ export class AuthService {
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(this.auth, provider);
-    this.UserData = result.user;
+    this.setUserData(result.user);
 
     await this.logProviderData(result.user);
     this.router.navigate(['/home']);
@@ -51,13 +59,13 @@ export class AuthService {
   async loginWithFacebook() {
     const provider = new FacebookAuthProvider();
     const result = await signInWithPopup(this.auth, provider);
-    this.UserData = result.user;
+    this.setUserData(result.user);
 
     await this.logProviderData(result.user);
     this.router.navigate(['/home']);
   }
 
-  private async logProviderData(user: User, extraData: any = {}) {
+  private async logProviderData(user: any, extraData: any = {}) {
     const userRef = doc(this.firestore, 'users', user.uid);
     const existing = await getDoc(userRef);
 
@@ -72,7 +80,7 @@ export class AuthService {
       }
 
       await setDoc(userRef, {
-        firebaseAuthUID: user.uid,
+        uid: user.uid,
         displayName: user.displayName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
@@ -106,5 +114,40 @@ export class AuthService {
       throw new Error('User not authenticated');
     }
     return user.uid;
+  }
+
+
+  setUserData(user: any) {
+    const userRef = doc(this.firestore, 'users', user.uid);
+    const userDoc = getDoc(userRef);
+
+    userDoc.then(user => {
+      console.log('user: ', user.data());
+      const userData = user.data();
+      if (userData) {
+
+        if (!userData['firstName']?.length || !userData['lastName']?.length) {
+          console.log(`[AuthService] set names ${userData['displayName']}`)
+          const nameParts = userData['displayName']?.split(' ') || [];
+          userData['firstName'] = nameParts[0] || '';
+          userData['lastName'] = nameParts.slice(1).join(' ') || '';
+        }
+
+        this.UserData = {
+          uid: userData['uid'],
+          displayName: userData['displayName'] || '',
+          email: userData['email'] || '',
+          phoneNumber: userData['phoneNumber'] || '',
+          photoURL: userData['photoURL'] || '',
+          providerId: userData['providerData']?.[0]?.providerId || '',
+          firstName: userData['firstName'] || '',
+          lastName: userData['lastName'] || ''
+        }
+
+        console.log(`[AuthService] setUserData: ${JSON.stringify(this.UserData)}`);
+        console.log(userData);
+      }
+    })
+
   }
 }

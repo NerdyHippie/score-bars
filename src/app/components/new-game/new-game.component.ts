@@ -85,8 +85,8 @@ export class NewGameComponent implements OnInit {
     setDoc(gameRef, {
       players: players,
       createdAt: serverTimestamp(),
+      createdBy: this.authService.getCurrentUserId(),
       mode,
-      scores: Array(players.length).fill(0),
       currentPlayerIndex: 0,
       currentPlayerId: firstPlayerId
     }).then(() => {

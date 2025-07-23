@@ -26,6 +26,11 @@ import { MatIconModule } from '@angular/material/icon';
 export class AppComponent {
   constructor(public authService: AuthService) {}
 
+  getUserName(): string {
+
+    return this.authService.UserData ? this.authService.UserData.firstName : '';
+  }
+
   logout() {
     this.authService.logout();
   }
