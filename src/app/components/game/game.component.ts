@@ -4,14 +4,12 @@ import { Firestore, doc, updateDoc, arrayUnion, docData } from '@angular/fire/fi
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
-import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrettyJsonPipe } from '../../pipes/pretty-json-pipe';
 import { DiceService } from '../../services/dice.service';
 import { ScoringService } from '../../services/scoring.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
-import {ScoreOption} from '../../interfaces/score-option';
 import {GameState} from '../../interfaces/game-state';
 import {Player} from '../../interfaces/player';
 import {DiceDisplay} from '../dice-display/dice-display';
@@ -24,7 +22,7 @@ import {GameService} from '../../services/game.service';
   standalone: true,
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
-  imports: [CommonModule, MatButtonModule, MatChipsModule, NgIf, NgFor, FormsModule, PrettyJsonPipe, DiceDisplay, BankedDiceDisplay, ScoreOptionsDisplay],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, FormsModule, PrettyJsonPipe, DiceDisplay, BankedDiceDisplay, ScoreOptionsDisplay],
   providers: [DiceService, ScoringService]
 })
 export class GameComponent implements OnInit, OnDestroy {
@@ -34,7 +32,6 @@ export class GameComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private firestore = inject(Firestore);
   private diceService = inject(DiceService);
-  private scoringService = inject(ScoringService);
   private authService = inject(AuthService);
   private gameService = inject(GameService)
 
@@ -46,9 +43,6 @@ export class GameComponent implements OnInit, OnDestroy {
   gameState: GameState = this.gameService.gameState
 
   displayDice: number[] = []; // used for randomized visuals
-
-  //  BUG:  When all 6 dice are rolled, the turnScore is reset to 0 when last choice is banked
-
 
   ngOnInit() {
     this.gameState.gameOver = false;

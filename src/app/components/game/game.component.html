@@ -7,14 +7,20 @@
 
 <div class="players">
   <mat-chip-set>
-    <mat-chip
-      *ngFor="let player of gameState.players; let i = index"
-      [class.current-player]="i === gameState.currentPlayerIndex"
-      [class.enlarged]="gameState.gameMode === 'local' && i === gameState.currentPlayerIndex || gameState.gameMode === 'remote' && player.uid === myPlayerId"
-      [class.eliminated-player]="player.eliminated">
+    @for (player of gameState.players; track player.uid; let i = $index) {
+      <mat-chip
+        [class.current-player]="i === gameState.currentPlayerIndex"
+        [class.enlarged]="
+          (gameState.gameMode === 'local' && i === gameState.currentPlayerIndex) ||
+          (gameState.gameMode === 'remote' && player.uid === myPlayerId)
+        "
+        [class.eliminated-player]="player.eliminated"
+      >
       {{ player.name }} | {{ player.score }}
-    </mat-chip>
+      </mat-chip>
+    }
   </mat-chip-set>
+
 </div>
 
 <app-dice-display [dice]="gameState.dice" [rolling]="gameState.rolling" />

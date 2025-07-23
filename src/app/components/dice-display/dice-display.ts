@@ -1,13 +1,11 @@
 import {Component, inject, Input, SimpleChanges} from '@angular/core';
-import { GameState } from '../../interfaces/game-state';
-import {JsonPipe, NgForOf} from '@angular/common';
+import {NgForOf} from '@angular/common';
 import {DiceService} from '../../services/dice.service';
 
 @Component({
   selector: 'app-dice-display',
   imports: [
-    NgForOf,
-    JsonPipe
+    NgForOf
   ],
   standalone: true,
   templateUrl: './dice-display.html',
