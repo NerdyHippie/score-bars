@@ -15,18 +15,18 @@ import {
   getDoc
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import {firstValueFrom} from 'rxjs';
+import {BehaviorSubject, firstValueFrom} from 'rxjs';
 import { UserData } from '../interfaces/user-data';
 
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  public UserData: UserData | null = null;
+  public UserData: BehaviorSubject<UserData | null> = new BehaviorSubject<UserData | null>(null);
 
 
   constructor(private auth: Auth, private firestore: Firestore, private router: Router) {
     onAuthStateChanged(this.auth, (user) => {
-      console.log('Auth state changed:', user);
+      // console.log('Auth state changed:', user);
       this.setUserData(user);
       // optionally emit an event or BehaviorSubject here
     });
@@ -66,6 +66,7 @@ export class AuthService {
   }
 
   private async logProviderData(user: any, extraData: any = {}) {
+    console.log(`[AuthService] logProviderData:`, user, extraData);
     const userRef = doc(this.firestore, 'users', user.uid);
     const existing = await getDoc(userRef);
 
@@ -94,7 +95,7 @@ export class AuthService {
 
   async logout() {
     await signOut(this.auth);
-    this.UserData = null;
+    this.UserData.next(null);
     this.router.navigate(['/']);
   }
 
@@ -133,7 +134,7 @@ export class AuthService {
           userData['lastName'] = nameParts.slice(1).join(' ') || '';
         }
 
-        this.UserData = {
+        this.UserData.next({
           uid: userData['uid'],
           displayName: userData['displayName'] || '',
           email: userData['email'] || '',
@@ -142,10 +143,9 @@ export class AuthService {
           providerId: userData['providerData']?.[0]?.providerId || '',
           firstName: userData['firstName'] || '',
           lastName: userData['lastName'] || ''
-        }
+        })
 
-        console.log(`[AuthService] setUserData: ${JSON.stringify(this.UserData)}`);
-        console.log(userData);
+        console.log(`[AuthService] setUserData:`, this.UserData.value);
       }
     })
 

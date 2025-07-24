@@ -1,4 +1,4 @@
-<div *ngIf="mode === 'local'">
+<div *ngIf="gameMode === 'local'">
   <h2>Start a Local Game</h2>
   <p>Enter player names:</p>
   <div *ngFor="let player of players; let i = index">
@@ -8,7 +8,7 @@
   <button (click)="submitLocalGame()">Start Game</button>
 </div>
 
-<div *ngIf="mode === 'remote' && gameId">
+<div *ngIf="gameMode === 'remote' && gameId">
   <h2>Remote Game Lobby</h2>
 
   <p>Share this link to invite players:</p>
@@ -35,7 +35,7 @@
   </div>
 </div>
 
-<div *ngIf="mode === 'solo'">
+<div *ngIf="gameMode === 'solo'">
   <h2>Start a Solo Game</h2>
   <button (click)="submitSoloGame()">Start Game</button>
 </div>

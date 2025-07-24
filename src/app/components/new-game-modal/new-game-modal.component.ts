@@ -40,6 +40,6 @@ export class NewGameModalComponent implements OnInit {
 
   startGame() {
     if (!this.playerName || !this.gameMode) return;
-    this.dialogRef.close({ mode: this.gameMode, playerName: this.playerName });
+    this.dialogRef.close({ gameMode: this.gameMode, playerName: this.playerName });
   }
 }

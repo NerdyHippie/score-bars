@@ -1,19 +1,18 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Firestore, collection, collectionData, deleteDoc, doc } from '@angular/fire/firestore';
+import { Firestore, collection, query, where, getDocs, doc, deleteDoc } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
-import { Observable, of, switchMap, map } from 'rxjs';
+import {Observable, of, switchMap, map, from, filter, tap} from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NewGameModalComponent } from '../../components/new-game-modal/new-game-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Game } from '../../interfaces/game';
-import {AuthService} from '../../services/auth.service';
-
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -39,22 +38,36 @@ export class HomeComponent implements OnInit {
     private router: Router,
     private authService: AuthService
   ) {
-    const gamesRef = collection(this.firestore, 'games');
-    const allGames$ = collectionData(gamesRef, { idField: 'id' }) as Observable<Game[]>;
+    this.games$ = this.authService.UserData.pipe(
+      tap(user => console.log('[DEBUG] UserData emitted:', user)),
+      filter(user => !!user?.uid),
+      switchMap(async user => {
+        console.log('Hello!')
+        const gamesRef = collection(this.firestore, 'games');
 
-    this.games$ = of(this.authService.UserData).pipe(
-      switchMap(user => {
-        if (!user?.uid) return of([]);
-        return allGames$.pipe(
-          map(games => games.filter(game =>
-            game.players?.some(p => p.uid === user.uid)
-          ))
-        );
-      })
+        const createdByQuery = query(gamesRef, where('createdBy', '==', user!.uid));
+        // const playerUidsQuery = query(gamesRef, where('playerUids', 'array-contains', user!.uid));
+
+        const [createdBySnap/*, playerUidsSnap*/] = await Promise.all([
+          getDocs(createdByQuery),
+          // getDocs(playerUidsQuery)
+        ]);
+
+        const gamesMap = new Map<string, Game>();
+
+        createdBySnap.forEach(doc => gamesMap.set(doc.id, { id: doc.id, ...doc.data() } as Game));
+        // playerUidsSnap.forEach(doc => gamesMap.set(doc.id, { id: doc.id, ...doc.data() } as Game));
+
+        return Array.from(gamesMap.values());
+      }),
+      switchMap(games => from(Promise.resolve(games)))
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+
+    console.log('usrData',this.authService.UserData.value)
+  }
 
   goToGame(gameId: string): void {
     this.router.navigate(['/game', gameId]);

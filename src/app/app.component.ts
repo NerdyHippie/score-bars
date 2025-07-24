@@ -27,8 +27,8 @@ export class AppComponent {
   constructor(public authService: AuthService) {}
 
   getUserName(): string {
-
-    return this.authService.UserData ? this.authService.UserData.firstName : '';
+    const usrData = this.authService.UserData.getValue()
+    return usrData ? usrData.firstName : '';
   }
 
   logout() {

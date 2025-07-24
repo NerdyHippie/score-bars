@@ -26,7 +26,7 @@ export class NewGameComponent implements OnInit {
   errorMessage: string = '';
   @ViewChildren('playerInput') playerInputs!: QueryList<ElementRef>;
 
-  mode: 'remote' | 'local' | 'solo' | null = null;
+  gameMode: 'remote' | 'local' | 'solo' | null = null;
   playerName: string = '';
   gameId: string = '';
   players: Player[] = [ { name: 'Player 1', uid: '1', score: 0, eliminated: false }, { name: 'Player 2', uid: '2', score: 0, eliminated: false } ];
@@ -39,10 +39,10 @@ export class NewGameComponent implements OnInit {
   private authService = inject(AuthService);
 
   ngOnInit(): void {
-    this.mode = this.route.snapshot.queryParamMap.get('mode') as any;
+    this.gameMode = this.route.snapshot.queryParamMap.get('mode') as any;
     this.playerName = this.route.snapshot.queryParamMap.get('playerName') ?? 'Player';
 
-    if (this.mode === 'remote') {
+    if (this.gameMode === 'remote') {
       this.gameId = doc(collection(this.firestore, 'games')).id;
       this.shareLink = `${window.location.origin}/join-game?mode=remote&gameId=${this.gameId}`;
 
@@ -50,7 +50,7 @@ export class NewGameComponent implements OnInit {
       setDoc(lobbyRef, {
         players: [{ name: this.playerName, uid: this.authService.getCurrentUserId(), score: 0, eliminated: false }],
         createdAt: serverTimestamp(),
-        mode: 'remote'
+        gameMode: 'remote'
       });
 
       // Real-time sync of joined players
@@ -58,7 +58,7 @@ export class NewGameComponent implements OnInit {
         const data = snapshot.data();
         this.joinedPlayers = data?.['players'] ?? [];
       });
-    } else if (this.mode === 'solo') {
+    } else if (this.gameMode === 'solo') {
       this.players = [{ name: this.playerName, uid: this.authService.getCurrentUserId(), score: 0, eliminated: false }];
     }
   }
@@ -73,24 +73,24 @@ export class NewGameComponent implements OnInit {
     }, 100);
   }
 
-  createGame(mode: string) {
+  createGame(gameMode: string) {
     this.errorMessage = '';
 
-    const newGameId = (mode === 'remote') ? this.gameId : doc(collection(this.firestore, 'games')).id;
+    const newGameId = (gameMode === 'remote') ? this.gameId : doc(collection(this.firestore, 'games')).id;
     const gameRef = doc(this.firestore, `games/${newGameId}`);
 
-    const players = mode === 'remote' ? this.joinedPlayers : this.players;
+    const players = gameMode === 'remote' ? this.joinedPlayers : this.players;
     const firstPlayerId = players[0]?.uid ?? null;
 
     setDoc(gameRef, {
       players: players,
       createdAt: serverTimestamp(),
       createdBy: this.authService.getCurrentUserId(),
-      mode,
+      gameMode,
       currentPlayerIndex: 0,
       currentPlayerId: firstPlayerId
     }).then(() => {
-      if (mode === 'remote') {
+      if (gameMode === 'remote') {
         const lobbyRef = doc(this.firestore, `lobbies/${this.gameId}`);
         updateDoc(lobbyRef, { started: true }).then(() => this.router.navigate(['/game', this.gameId]));
 
