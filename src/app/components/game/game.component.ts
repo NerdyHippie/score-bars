@@ -51,7 +51,7 @@ export class GameComponent implements OnInit, OnDestroy {
     const gameRef = doc(this.firestore, `games/${this.gameState.gameId}`);
 
     this.gameSub = docData(gameRef).subscribe((data: any) => {
-      this.gameState.gameMode = data.mode;
+      this.gameState.gameMode = data.gameMode;
 
       if (!this.myPlayerId) {
         this.myPlayerId = this.gameState.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();

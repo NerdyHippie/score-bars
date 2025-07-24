@@ -39,7 +39,7 @@ export class NewGameComponent implements OnInit {
   private authService = inject(AuthService);
 
   ngOnInit(): void {
-    this.gameMode = this.route.snapshot.queryParamMap.get('mode') as any;
+    this.gameMode = this.route.snapshot.queryParamMap.get('gameMode') as any;
     this.playerName = this.route.snapshot.queryParamMap.get('playerName') ?? 'Player';
 
     if (this.gameMode === 'remote') {

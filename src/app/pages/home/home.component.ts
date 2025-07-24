@@ -80,7 +80,7 @@ export class HomeComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(gameData => {
       if (gameData) {
-        this.router.navigate(['/new-game'], { queryParams: { mode: gameData.mode, playerName: gameData.playerName } });
+        this.router.navigate(['/new-game'], { queryParams: { gameMode: gameData.gameMode, playerName: gameData.playerName } });
       }
     });
   }
