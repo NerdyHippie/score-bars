@@ -2,6 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {GameState} from '../interfaces/game-state';
 import {DiceService} from './dice.service';
 import {ScoringService} from './scoring.service';
+import {BehaviorSubject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class GameService {
   private diceService = inject(DiceService);
   private scoringService = inject(ScoringService);
 
-  public gameState: GameState = {
+  public gameState: BehaviorSubject<GameState> = new BehaviorSubject<GameState>({
     gameId: '',
     gameMode: '',
     players: [],
@@ -31,29 +32,38 @@ export class GameService {
     gameOver: false,
     winnerName: '',
     bankedSinceLastRoll: true,
-  };
+  });
 
   constructor() { }
 
   getActivePlayerName() {
-    return this.gameState.players[this.gameState.currentPlayerIndex]?.name || 'error'
+    const gameState = this.gameState.getValue();
+    if (!gameState.gameId) {
+      return 'loading'
+    }
+    console.log(`[GameService] getActivePlayerName(): ${gameState.gameId} | ${gameState.currentPlayerIndex} : ${gameState.players[gameState.currentPlayerIndex]?.name}`, gameState.players);
+    return gameState.players[gameState.currentPlayerIndex]?.name || 'error'
   }
 
   resetDice(reroll: boolean = false) {
-    this.gameState.dice = this.diceService.getReadyDice();
-    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(this.gameState.dice)}`);
+    const gameState = this.gameState.getValue();
+    gameState.dice = this.diceService.getReadyDice();
+    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(gameState.dice)}`);
     if (!reroll) {
-      this.gameState.bankedDice = [];
-      this.gameState.turnScore = 0;
-      this.gameState.hasRolled = false;
-      this.gameState.allDiceScoredMessage = false;
+      gameState.bankedDice = [];
+      gameState.turnScore = 0;
+      gameState.hasRolled = false;
+      gameState.allDiceScoredMessage = false;
     }
-    this.gameState.scoringOptions = [];
-    this.gameState.noScoreMessage = false;
-    this.gameState.bankedSinceLastRoll = false;
+    gameState.scoringOptions = [];
+    gameState.noScoreMessage = false;
+    gameState.bankedSinceLastRoll = false;
+    this.gameState.next(gameState);
   }
 
   calculateScoringOptions() {
-    this.gameState.scoringOptions = this.scoringService.getScoringOptions(this.gameState.dice);
+    const gameState = this.gameState.getValue();
+    gameState.scoringOptions = this.scoringService.getScoringOptions(gameState.dice);
+    this.gameState.next(gameState);
   }
 }

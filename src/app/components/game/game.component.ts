@@ -9,7 +9,7 @@ import { PrettyJsonPipe } from '../../pipes/pretty-json-pipe';
 import { DiceService } from '../../services/dice.service';
 import { ScoringService } from '../../services/scoring.service';
 import { AuthService } from '../../services/auth.service';
-import { Subscription } from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import {GameState} from '../../interfaces/game-state';
 import {Player} from '../../interfaces/player';
 import {DiceDisplay} from '../dice-display/dice-display';
@@ -40,18 +40,40 @@ export class GameComponent implements OnInit, OnDestroy {
   myPlayerId: string = '';
   myTurn = true;
 
-  gameState: GameState = this.gameService.gameState
+  gameState: BehaviorSubject<GameState> = this.gameService.gameState
 
   displayDice: number[] = []; // used for randomized visuals
 
   ngOnInit() {
-    this.gameState.gameOver = false;
+    this.gameService.gameState.subscribe(gameState => {
+      const gameId = this.route.snapshot.paramMap.get('id') ?? '';
+      if (gameId !== gameState.gameId) {
+        this.resetGame(gameId);
+      }
+    })
+
+
+
+
+    /*this.gameState.gameOver = false;
     this.gameState.winnerName = '';
-    this.gameState.gameId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.gameState.gameId = this.route.snapshot.paramMap.get('id') ?? '';*/
+
+  }
+
+  resetGame(gameId: string): void {
+    const gameState = {
+      ...this.gameState.getValue(),
+      gameOver: false,
+      winnerName: '',
+    }
+    this.gameState.next(gameState);
+
     const gameRef = doc(this.firestore, `games/${this.gameState.gameId}`);
 
     this.gameSub = docData(gameRef).subscribe((data: any) => {
-      this.gameState.gameMode = data.mode;
+      console.log('[Game] game data in ngOnInit', data);
+      this.gameState.gameMode = data.gameMode;
 
       if (!this.myPlayerId) {
         this.myPlayerId = this.gameState.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
