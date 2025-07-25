@@ -1,4 +1,5 @@
 import {inject, Injectable} from '@angular/core';
+import {BehaviorSubject} from 'rxjs';
 import {GameState} from '../interfaces/game-state';
 import {DiceService} from './dice.service';
 import {ScoringService} from './scoring.service';
@@ -10,7 +11,7 @@ export class GameService {
   private diceService = inject(DiceService);
   private scoringService = inject(ScoringService);
 
-  public gameState: GameState = {
+  private initialState: GameState = {
     gameId: '',
     gameMode: '',
     players: [],
@@ -33,27 +34,34 @@ export class GameService {
     bankedSinceLastRoll: true,
   };
 
+  public gameState = new BehaviorSubject<GameState>(this.initialState);
+
   constructor() { }
 
   getActivePlayerName() {
-    return this.gameState.players[this.gameState.currentPlayerIndex]?.name || 'error'
+    const state = this.gameState.value;
+    return state.players[state.currentPlayerIndex]?.name || 'error'
   }
 
   resetDice(reroll: boolean = false) {
-    this.gameState.dice = this.diceService.getReadyDice();
-    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(this.gameState.dice)}`);
+    const state = this.gameState.value;
+    state.dice = this.diceService.getReadyDice();
+    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(state.dice)}`);
     if (!reroll) {
-      this.gameState.bankedDice = [];
-      this.gameState.turnScore = 0;
-      this.gameState.hasRolled = false;
-      this.gameState.allDiceScoredMessage = false;
+      state.bankedDice = [];
+      state.turnScore = 0;
+      state.hasRolled = false;
+      state.allDiceScoredMessage = false;
     }
-    this.gameState.scoringOptions = [];
-    this.gameState.noScoreMessage = false;
-    this.gameState.bankedSinceLastRoll = false;
+    state.scoringOptions = [];
+    state.noScoreMessage = false;
+    state.bankedSinceLastRoll = false;
+    this.gameState.next(state);
   }
 
   calculateScoringOptions() {
-    this.gameState.scoringOptions = this.scoringService.getScoringOptions(this.gameState.dice);
+    const state = this.gameState.value;
+    state.scoringOptions = this.scoringService.getScoringOptions(state.dice);
+    this.gameState.next(state);
   }
 }

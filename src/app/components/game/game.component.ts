@@ -40,54 +40,60 @@ export class GameComponent implements OnInit, OnDestroy {
   myPlayerId: string = '';
   myTurn = true;
 
-  gameState: GameState = this.gameService.gameState
+  gameState: GameState = this.gameService.gameState.value
 
   displayDice: number[] = []; // used for randomized visuals
 
   ngOnInit() {
-    this.gameState.gameOver = false;
-    this.gameState.winnerName = '';
-    this.gameState.gameId = this.route.snapshot.paramMap.get('id') ?? '';
-    const gameRef = doc(this.firestore, `games/${this.gameState.gameId}`);
+    this.gameService.gameState.subscribe(state => this.gameState = state);
+    const state = this.gameService.gameState.value;
+    state.gameOver = false;
+    state.winnerName = '';
+    state.gameId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.gameService.gameState.next(state);
+    const gameRef = doc(this.firestore, `games/${state.gameId}`);
 
     this.gameSub = docData(gameRef).subscribe((data: any) => {
-      this.gameState.gameMode = data.gameMode;
+      const state = this.gameService.gameState.value;
+      state.gameMode = data.gameMode;
 
       if (!this.myPlayerId) {
-        this.myPlayerId = this.gameState.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
+        this.myPlayerId = state.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
       }
 
       this.updateGameState(data);
 
-      this.myTurn = this.gameState.gameMode === 'local' || this.gameState.currentPlayerId === this.myPlayerId;
+      this.myTurn = state.gameMode === 'local' || state.currentPlayerId === this.myPlayerId;
 
-      console.log(`[game] hasRolled: ${this.gameState.hasRolled}`);
+      console.log(`[game] hasRolled: ${state.hasRolled}`);
       console.log(`[game] myTurn: ${this.myTurn}`);
-      if (!this.gameState.hasRolled) {
+      if (!state.hasRolled) {
         if (this.myTurn) {
           this.resetDice();
         } else {
-          this.gameState.dice = this.diceService.getWaitingDice();
+          state.dice = this.diceService.getWaitingDice();
         }
       }
+      this.gameService.gameState.next(state);
       // this.displayDice = [...this.gameState.dice];
     });
   }
 
   updateGameState(data: any) {
-    this.gameState.players = data.players;
-    // this.gameState.scores = data.scores || Array(this.gameState.players.length).fill(0);
-    this.gameState.currentPlayerIndex = data.currentPlayerIndex ?? 0;
-    this.gameState.currentPlayerId = data.currentPlayerId ?? 'not set';
-    this.gameState.finalRound = data.finalRound || false;
-    this.gameState.finalRoundStarterIndex = data.finalRoundStarterIndex ?? null;
-    this.gameState.gameOver = data.gameOver || false;
-    this.gameState.winnerName = data.winnerName || '';
+    const state = this.gameService.gameState.value;
+    state.players = data.players;
+    // state.scores = data.scores || Array(state.players.length).fill(0);
+    state.currentPlayerIndex = data.currentPlayerIndex ?? 0;
+    state.currentPlayerId = data.currentPlayerId ?? 'not set';
+    state.finalRound = data.finalRound || false;
+    state.finalRoundStarterIndex = data.finalRoundStarterIndex ?? null;
+    state.gameOver = data.gameOver || false;
+    state.winnerName = data.winnerName || '';
 
-
-    this.gameState.dice = data.activeDice || [];
-    this.gameState.bankedThisTurn = data.activeBankedDice || [];
-    this.gameState.scoringOptions = data.activeScoringOptions || [];
+    state.dice = data.activeDice || [];
+    state.bankedThisTurn = data.activeBankedDice || [];
+    state.scoringOptions = data.activeScoringOptions || [];
+    this.gameService.gameState.next(state);
   }
 
 
@@ -119,19 +125,21 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   rollDice() {
-    if (this.gameState.gameOver || this.isRollAgainBlocked()) return;
+    const state = this.gameService.gameState.value;
+    if (state.gameOver || this.isRollAgainBlocked()) return;
 
     const diceToRoll = Math.max(0,
-      this.gameState.allDiceScoredMessage ? 6 :
-        this.gameState.dice.length === 0 ? 6 :
-          6 - this.gameState.bankedDice.length
+      state.allDiceScoredMessage ? 6 :
+        state.dice.length === 0 ? 6 :
+          6 - state.bankedDice.length
     );
     const newRoll = this.diceService.rollDice(diceToRoll);
-    this.gameState.rolling = true;
-    this.gameState.hasRolled = true;
-    this.gameState.noScoreMessage = false;
-    this.gameState.allDiceScoredMessage = false;
-    this.gameState.bankedSinceLastRoll = false;
+    state.rolling = true;
+    state.hasRolled = true;
+    state.noScoreMessage = false;
+    state.allDiceScoredMessage = false;
+    state.bankedSinceLastRoll = false;
+    this.gameService.gameState.next(state);
 
     // this.startRandomizingDice();
 
@@ -139,22 +147,24 @@ export class GameComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       // this.stopRandomizingDice();
       console.log(`[game] stop rolling ${JSON.stringify(newRoll)}`);
-      this.gameState.dice = newRoll;
+      const s = this.gameService.gameState.value;
+      s.dice = newRoll;
       this.displayDice = [...newRoll];
-      this.gameState.rolling = false;
+      s.rolling = false;
       this.calculateScoringOptions();
 
-      if (this.myTurn && this.gameState.gameMode === 'remote') {
-        updateDoc(doc(this.firestore, `games/${this.gameState.gameId}`), {
-          activeDice: this.gameState.dice,
-          activeScoringOptions: this.gameState.scoringOptions
+      if (this.myTurn && s.gameMode === 'remote') {
+        updateDoc(doc(this.firestore, `games/${s.gameId}`), {
+          activeDice: s.dice,
+          activeScoringOptions: s.scoringOptions
         });
       }
 
-      if (this.gameState.scoringOptions.length === 0) {
-        this.gameState.noScoreMessage = true;
-        this.gameState.turnScore = 0;
+      if (s.scoringOptions.length === 0) {
+        s.noScoreMessage = true;
+        s.turnScore = 0;
       }
+      this.gameService.gameState.next(s);
     }, 800);
   }
 
@@ -183,11 +193,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   async endTurn() {
-    if (this.gameState.gameOver || !this.myTurn || (this.gameState.turnScore === 0 && this.gameState.scoringOptions.length > 0)) return;
+    const state = this.gameService.gameState.value;
+    if (state.gameOver || !this.myTurn || (state.turnScore === 0 && state.scoringOptions.length > 0)) return;
 
-    const player = this.gameState.players[this.gameState.currentPlayerIndex];
-    const shouldScore = player.score > 0 || this.gameState.turnScore >= this.ENTRY_THRESHOLD;
-    const appliedScore = shouldScore ? this.gameState.turnScore : 0;
+    const player = state.players[state.currentPlayerIndex];
+    const shouldScore = player.score > 0 || state.turnScore >= this.ENTRY_THRESHOLD;
+    const appliedScore = shouldScore ? state.turnScore : 0;
 
     player.score += appliedScore;
 
@@ -197,36 +208,36 @@ export class GameComponent implements OnInit, OnDestroy {
       timestamp: new Date()
     };
 
-    this.gameState.bankedThisTurn = [];
+    state.bankedThisTurn = [];
 
-    const gameRef = doc(this.firestore, `games/${this.gameState.gameId}`);
+    const gameRef = doc(this.firestore, `games/${state.gameId}`);
     const gameUpdate: any = {
-      players: this.gameState.players,
+      players: state.players,
       turns: arrayUnion(turnData),
-      lastPlayer: this.gameState.currentPlayerIndex,
-      activeBankedDice: this.gameState.bankedThisTurn
+      lastPlayer: state.currentPlayerIndex,
+      activeBankedDice: state.bankedThisTurn
     };
 
-    if (!this.gameState.finalRound && player.score >= this.TARGET_SCORE) {
-      this.gameState.finalRound = true;
-      this.gameState.finalRoundStarterIndex = this.gameState.currentPlayerIndex;
-    } else if (this.gameState.finalRound) {
+    if (!state.finalRound && player.score >= this.TARGET_SCORE) {
+      state.finalRound = true;
+      state.finalRoundStarterIndex = state.currentPlayerIndex;
+    } else if (state.finalRound) {
 
-      const totalPlayers = this.gameState.players.length;
-      const lastIndexInRound = (this.gameState.finalRoundStarterIndex! + totalPlayers - 1) % totalPlayers;
-      const justFinishedLastFinalTurn = this.gameState.currentPlayerIndex === lastIndexInRound;
+      const totalPlayers = state.players.length;
+      const lastIndexInRound = (state.finalRoundStarterIndex! + totalPlayers - 1) % totalPlayers;
+      const justFinishedLastFinalTurn = state.currentPlayerIndex === lastIndexInRound;
 
 
       // TODO: Figure out how to calculate highestScore based on player.score
       // const highestScore = Math.max(...this.gameState.scores);
-      const highestScore = Math.max(...this.gameState.players.map(p => p.score))
+      const highestScore = Math.max(...state.players.map(p => p.score))
       console.log(`Highest score: ${highestScore}`);
 
-      const myScore = this.gameState.players[this.gameState.currentPlayerIndex].score;
+      const myScore = state.players[state.currentPlayerIndex].score;
 
       if (myScore < highestScore) {
         player.eliminated = true;
-        gameUpdate.players = this.gameState.players;
+        gameUpdate.players = state.players;
       }
 
     }
@@ -235,34 +246,35 @@ export class GameComponent implements OnInit, OnDestroy {
     const nextIndex = nextUp.nextIndex;
 
 
-    const remainingPlayers = this.gameState.players.filter(player => !player.eliminated);
+    const remainingPlayers = state.players.filter(player => !player.eliminated);
 
     if (remainingPlayers.length === 1) {
-      this.gameState.gameOver = true;
+      state.gameOver = true;
 
       const winningPlayer = remainingPlayers[0];
 
-      this.gameState.winnerName = winningPlayer.name;
+      state.winnerName = winningPlayer.name;
       gameUpdate.gameIsFinished = true;
       gameUpdate.gameOver = true;
-      gameUpdate.winnerName = this.gameState.winnerName;
+      gameUpdate.winnerName = state.winnerName;
     }
 
-    gameUpdate.finalRound = this.gameState.finalRound;
-    gameUpdate.finalRoundStarterIndex = this.gameState.finalRoundStarterIndex;
+    gameUpdate.finalRound = state.finalRound;
+    gameUpdate.finalRoundStarterIndex = state.finalRoundStarterIndex;
     gameUpdate.currentPlayerIndex = nextIndex;
-    gameUpdate.currentPlayerId = this.gameState.players[nextIndex].uid;
+    gameUpdate.currentPlayerId = state.players[nextIndex].uid;
 
     console.log(' --- gameUpdate --- ');
     console.log(gameUpdate);
 
     await updateDoc(gameRef, gameUpdate);
 
-    this.gameState.turnScore = 0;
-    this.gameState.bankedDice = [];
-    this.gameState.hasRolled = false;
-    this.gameState.bankedSinceLastRoll = false;
-    this.gameState.currentPlayerIndex = nextIndex;
+    state.turnScore = 0;
+    state.bankedDice = [];
+    state.hasRolled = false;
+    state.bankedSinceLastRoll = false;
+    state.currentPlayerIndex = nextIndex;
+    this.gameService.gameState.next(state);
     this.resetDice();
   }
 }
