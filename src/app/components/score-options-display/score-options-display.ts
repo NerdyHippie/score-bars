@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {Component, EventEmitter, inject, Input, Output, OnInit} from '@angular/core';
 import {DiceService} from '../../services/dice.service';
 // import {ScoreOption} from '../../interfaces/score-option';
 import {GameState} from '../../interfaces/game-state';
@@ -14,7 +14,7 @@ import {GameService} from '../../services/game.service';
   templateUrl: './score-options-display.html',
   styleUrls: ['./score-options-display.scss', '../../shared-styles/sharedStyles.scss']
 })
-export class ScoreOptionsDisplay {
+export class ScoreOptionsDisplay implements OnInit {
   private diceService = inject(DiceService);
   private firestore = inject(Firestore);
   private gameService = inject(GameService);
@@ -24,56 +24,61 @@ export class ScoreOptionsDisplay {
   /*@Output() calcScores = new EventEmitter<void>();
   @Output() diceReset = new EventEmitter<boolean | void>();*/
 
-  gameState: GameState = this.gameService.gameState
+  gameState: GameState = this.gameService.gameState.value
+
+  ngOnInit(): void {
+    this.gameService.gameState.subscribe(state => this.gameState = state);
+  }
 
   getDieImage(value: number) {
     return this.diceService.getDieImage(value);
   }
 
   bank(option: ScoreOption) {
-    if (this.gameState.gameOver || !this.myTurn || this.gameState.bankedDice.length + option.dice.length > 6) return;
+    const state = this.gameService.gameState.value;
+    if (state.gameOver || !this.myTurn || state.bankedDice.length + option.dice.length > 6) return;
 
-    this.gameState.turnScore += option.score;
-    console.log(`[bank] turnScore: ${this.gameState.turnScore} (${option.dice})`);
+    state.turnScore += option.score;
+    console.log(`[bank] turnScore: ${state.turnScore} (${option.dice})`);
     option.dice.forEach(val => {
-      const index = this.gameState.dice.indexOf(val);
-      if (index > -1) this.gameState.dice.splice(index, 1);
-      this.gameState.bankedDice.push(val);
+      const index = state.dice.indexOf(val);
+      if (index > -1) state.dice.splice(index, 1);
+      state.bankedDice.push(val);
     });
-    console.log(`[bank] dice: ${this.gameState.dice}`);
-    console.log(`[bank] bankedDice: ${this.gameState.bankedDice}`);
+    console.log(`[bank] dice: ${state.dice}`);
+    console.log(`[bank] bankedDice: ${state.bankedDice}`);
 
     this.gameService.calculateScoringOptions();
-    // this.calcScores.emit(); // this.calculateScoringOptions();
-
-    console.log(`[bank] scoringOptions: ${JSON.stringify(this.gameState.scoringOptions)}`);
+    console.log(`[bank] scoringOptions: ${JSON.stringify(state.scoringOptions)}`);
 
     if (this.myTurn) {
-      this.gameState.bankedThisTurn.push(option)
-      console.log(`[bank] bankedThisTurn: ${this.gameState.bankedThisTurn}`)
+      state.bankedThisTurn.push(option)
+      console.log(`[bank] bankedThisTurn: ${state.bankedThisTurn}`)
 
-      if (this.gameState.gameMode === 'remote') {
+      if (state.gameMode === 'remote') {
         this.persistGameState();
       }
     }
-    this.gameState.bankedSinceLastRoll = true;
+    state.bankedSinceLastRoll = true;
 
-    if (this.gameState.bankedDice.length === 6) {
+    if (state.bankedDice.length === 6) {
       console.log(`[bank] roll again`)
-      this.gameService.resetDice(true); // this.diceReset.emit(true);  //this.resetDice(true);
-      this.gameState.bankedDice = [];
-      this.gameState.allDiceScoredMessage = true;
+      this.gameService.resetDice(true);
+      state.bankedDice = [];
+      state.allDiceScoredMessage = true;
     }
+    this.gameService.gameState.next(state);
   }
 
 
 
   persistGameState() {
     console.log('[persistGameState] saving dice, bankedDice, scoringOptions');
-    updateDoc(doc(this.firestore, `games/${this.gameState.gameId}`), {
-      activeDice: this.gameState.dice,
-      activeBankedDice: this.gameState.bankedThisTurn,
-      activeScoringOptions: this.gameState.scoringOptions
+    const state = this.gameService.gameState.value;
+    updateDoc(doc(this.firestore, `games/${state.gameId}`), {
+      activeDice: state.dice,
+      activeBankedDice: state.bankedThisTurn,
+      activeScoringOptions: state.scoringOptions
     });
   }
 
