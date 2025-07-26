@@ -3,6 +3,7 @@ import {BehaviorSubject} from 'rxjs';
 import {GameState} from '../interfaces/game-state';
 import {DiceService} from './dice.service';
 import {ScoringService} from './scoring.service';
+import {doc, docData, Firestore} from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,8 @@ import {ScoringService} from './scoring.service';
 export class GameService {
   private diceService = inject(DiceService);
   private scoringService = inject(ScoringService);
+  private firestore = inject(Firestore);
+
 
   private initialState: GameState = {
     gameId: '',
@@ -43,6 +46,17 @@ export class GameService {
     return state.players[state.currentPlayerIndex]?.name || 'error'
   }
 
+  calculateScoringOptions() {
+    const state = this.gameState.value;
+    state.scoringOptions = this.scoringService.getScoringOptions(state.dice);
+    this.gameState.next(state);
+  }
+
+  loadGame(gameId: string) {
+    const gameRef = doc(this.firestore, `games/${gameId}`);
+    return docData(gameRef);
+  }
+
   resetDice(reroll: boolean = false) {
     const state = this.gameState.value;
     state.dice = this.diceService.getReadyDice();
@@ -59,9 +73,11 @@ export class GameService {
     this.gameState.next(state);
   }
 
-  calculateScoringOptions() {
-    const state = this.gameState.value;
-    state.scoringOptions = this.scoringService.getScoringOptions(state.dice);
-    this.gameState.next(state);
+  resetGame(gameId?:string): void {
+    const newState = { ...this.initialState };
+    if (gameId) {
+      newState.gameId = gameId;
+    }
+    this.gameState.next(newState);
   }
 }

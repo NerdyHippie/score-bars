@@ -1,9 +1,8 @@
-@if (!(gameState.gameId && gameState.players && gameState.players.length)) {
+@if (loading) {
   <div class="loading">Loading Game</div>
 } @else {
   <div class="game-header">
     <h2 class="now-playing">Now playing: {{ getActivePlayerName() }}</h2>
-    <!--<span>Game ID: {{ gameId }}</span>-->
     <span></span>
     <button mat-button (click)="goHome()" class="home-button">Back to Home</button>
   </div>
@@ -23,17 +22,9 @@
         </mat-chip>
       }
     </mat-chip-set>
-
   </div>
 
   <app-dice-display [dice]="gameState.dice" [rolling]="gameState.rolling" />
-
-  <!--<div class="score-options-display game-messages debug-container">
-    <div>dice {{gameState.dice | json}}</div>
-    <div>bankedThisTurn {{gameState.bankedThisTurn | json}}</div>
-    <div>bankedDice {{gameState.bankedDice | json}}</div>
-    <div>scoreOpts {{gameState.scoringOptions | json}}</div>
-  </div>-->
 
   <app-score-options-display [myTurn]="myTurn" />
 
@@ -59,8 +50,5 @@
 
   <app-banked-dice-display [bankedThisTurn]="gameState.bankedThisTurn" />
 }
-
-
-
 
 <pre class="debug-container" [innerHTML]="getDebugData() | prettyjson: [false, 4]"></pre>

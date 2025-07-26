@@ -123,12 +123,10 @@ export class AuthService {
     const userDoc = getDoc(userRef);
 
     userDoc.then(user => {
-      console.log('user: ', user.data());
       const userData = user.data();
       if (userData) {
 
         if (!userData['firstName']?.length || !userData['lastName']?.length) {
-          console.log(`[AuthService] set names ${userData['displayName']}`)
           const nameParts = userData['displayName']?.split(' ') || [];
           userData['firstName'] = nameParts[0] || '';
           userData['lastName'] = nameParts.slice(1).join(' ') || '';
@@ -145,7 +143,6 @@ export class AuthService {
           lastName: userData['lastName'] || ''
         })
 
-        console.log(`[AuthService] setUserData:`, this.UserData.value);
       }
     })
 
