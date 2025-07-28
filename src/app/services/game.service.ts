@@ -70,6 +70,7 @@ export class GameService {
     state.scoringOptions = [];
     state.noScoreMessage = false;
     state.bankedSinceLastRoll = false;
+    console.log('-- updating gameState from resetDice()', state.dice);
     this.gameState.next(state);
   }
 
