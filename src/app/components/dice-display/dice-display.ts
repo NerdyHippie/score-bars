@@ -1,6 +1,7 @@
 import {Component, inject, Input, SimpleChanges} from '@angular/core';
 import {NgForOf} from '@angular/common';
 import {DiceService} from '../../services/dice.service';
+import {DebugService} from '../../services/debug.service';
 
 @Component({
   selector: 'app-dice-display',
@@ -13,6 +14,7 @@ import {DiceService} from '../../services/dice.service';
 })
 export class DiceDisplay {
   private diceService = inject(DiceService);
+  private debug = inject(DebugService);
   private randomizeInterval: any = null;
 
   @Input() dice!: number[];
@@ -22,7 +24,7 @@ export class DiceDisplay {
   displayDice: number[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('[ngOnChanges]', changes);
+    this.debug.msg('[ngOnChanges]', changes);
 
     if (changes['rolling']) {
       if (this.rolling) {

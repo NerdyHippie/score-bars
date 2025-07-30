@@ -16,6 +16,7 @@ import {DiceDisplay} from '../dice-display/dice-display';
 import {BankedDiceDisplay} from '../banked-dice-display/banked-dice-display';
 import {ScoreOptionsDisplay} from '../score-options-display/score-options-display';
 import {GameService} from '../../services/game.service';
+import {DebugService} from '../../services/debug.service';
 
 @Component({
   selector: 'app-game',
@@ -34,6 +35,7 @@ export class GameComponent implements OnInit, OnDestroy {
   private diceService = inject(DiceService);
   private authService = inject(AuthService);
   private gameService = inject(GameService);
+  private debug = inject(DebugService);
   private zone = inject(NgZone);
 
 
@@ -58,26 +60,14 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.gameService.loadGame(gameId);
 
-
-
     this.gameService.gameState$.subscribe(state => {
       this.gameState = state;
-      console.log('[GameComponent|gameState$] state changed: ', this.gameState);
+      this.debug.msg('[GameComponent|gameState$] state changed: ', this.gameState);
 
       if (state.gameId && !this.gameInitialized) {
         this.initGame();
       }
     });
-
-    const state = { ...this.gameService.gameState };
-
-    // console.log('[GameComponent|onInit] Game Loaded with state: ', JSON.stringify(state), JSON.stringify(this.gameState));
-
-
-    console.warn('TODO: Why the hell is dice geting reset to a blank array here???', state.hasRolled, this.myTurn, state.dice)
-    // console.log('-- updating gameState from inside gameSub', JSON.stringify(state));
-    // this.gameService.updateGameState(state);
-
   }
 
 
@@ -99,7 +89,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   getWaitingDice(): number[] {
-    // TODO: gotta update game state here somehow
     return this.diceService.getWaitingDice();
   }
 
@@ -114,10 +103,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
     if (!state.hasRolled) {
       if (this.myTurn) {
-        console.log('[GameComponent] my turn.  Reset dice!')
+        this.debug.msg('[GameComponent] my turn.  Reset dice!')
         this.resetDice();
       } else {
-        console.log('[GameComponent] NOT my turn.  Get WAIT dice!');
+        this.debug.msg('[GameComponent] NOT my turn.  Get WAIT dice!');
         this.gameService.updateGameState({dice: this.getWaitingDice()});
       }
     }
@@ -126,7 +115,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   resetDice(reroll: boolean = false) {
-    console.log('** firing resetDice')
+    this.debug.msg('** firing resetDice')
     this.gameService.resetDice(reroll);
   }
 
@@ -149,7 +138,7 @@ export class GameComponent implements OnInit, OnDestroy {
     state.noScoreMessage = false;
     state.allDiceScoredMessage = false;
     state.bankedSinceLastRoll = false;
-    console.log('-- updating gameState from rollDice()', state.dice);
+    this.debug.msg('-- updating gameState from rollDice()', state.dice);
     this.gameService.updateGameState(state);
 
     setTimeout(() => {
@@ -171,7 +160,7 @@ export class GameComponent implements OnInit, OnDestroy {
         s.turnScore = 0;
       }
 
-      console.log('[gameState update] from rollDice', s.dice);
+      this.debug.msg('[gameState update] from rollDice', s.dice);
       this.gameService.updateGameState(s);
     }, 800);
   }
@@ -265,7 +254,7 @@ export class GameComponent implements OnInit, OnDestroy {
     state.bankedSinceLastRoll = false;
     state.currentPlayerIndex = nextIndex;
 
-    console.log('[gameState update] from endTurn', state.dice);
+    this.debug.msg('[gameState update] from endTurn', state.dice);
     this.gameService.updateGameState(state);
     this.resetDice();
   }

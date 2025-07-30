@@ -1,9 +1,12 @@
-import { Injectable } from '@angular/core';
+import {inject, Injectable} from '@angular/core';
+import {DebugService} from './debug.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DiceService {
+  private debug = inject(DebugService);
+
   rollDie(): number {
     return Math.floor(Math.random() * 6) + 1;
   }
@@ -22,12 +25,12 @@ export class DiceService {
   }
 
   getReadyDice(): number[] {
-    console.log(`[DiceService] getting Ready dice`);
+    this.debug.msg(`[DiceService] getting Ready dice`);
     return Array(6).fill(0); // 0 means "ready" state
   }
 
   getWaitingDice(): number[] {
-    console.log(`[DiceService] getting Wait dice`);
+    this.debug.msg(`[DiceService] getting Wait dice`);
     return Array(6).fill(9);
 
   }

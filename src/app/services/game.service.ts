@@ -4,6 +4,7 @@ import {GameState} from '../interfaces/game-state';
 import {DiceService} from './dice.service';
 import {ScoringService} from './scoring.service';
 import {doc, docData, Firestore} from '@angular/fire/firestore';
+import {DebugService} from './debug.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class GameService {
   private diceService = inject(DiceService);
   private scoringService = inject(ScoringService);
   private firestore = inject(Firestore);
+  private debug = inject(DebugService);
 
 
   private initialState: GameState = {
@@ -49,7 +51,7 @@ export class GameService {
   }
 
   updateGameState(patch: Partial<GameState>) {
-    console.log('[GameService | updateGameState] patch data:', patch);
+    this.debug.msg('[GameService | updateGameState] patch data:', patch);
     const newState = { ...this.gameState, ...patch };
     this.gameStateSubject.next(newState);
   }
@@ -62,21 +64,21 @@ export class GameService {
   calculateScoringOptions() {
     const state = this.gameStateSubject.value;
     state.scoringOptions = this.scoringService.getScoringOptions(state.dice);
-    console.log('[gameState update] from calculateScoringOptions', state.dice);
+    this.debug.msg('[gameState update] from calculateScoringOptions', state.dice);
     this.updateGameState(state);
   }
 
   loadGame(gameId: string) {
     const gameRef = doc(this.firestore, `games/${gameId}`);
     this.gameSub = docData(gameRef).subscribe(gameData => {
-      console.log('[GameService | loadGame] gameData', gameData);
+      this.debug.msg('[GameService | loadGame] gameData', gameData);
       if (gameData) {
         if (!gameData['gameId']) {
-          console.log('[GameService | loadGame] gameId not found, do setup');
+          this.debug.msg('[GameService | loadGame] gameId not found, do setup');
           gameData['gameId'] = gameId;
           this.setupGameState(gameData);
         } else {
-          console.log(`[GameService | loadGame] gameId is ${gameId}, load without setup`);
+          this.debug.msg(`[GameService | loadGame] gameId is ${gameId}, load without setup`);
           this.updateGameState(gameData as Partial<GameState>);
         }
 
@@ -86,14 +88,14 @@ export class GameService {
   }
 
   setupGameState(data: any) {
-    console.log('[updateGameState]');
-    /*console.log(JSON.stringify({...data}));
-    console.log(JSON.stringify({...this.gameService.gameState}));*/
+    this.debug.msg('[updateGameState]');
+    /*this.debug.msg(JSON.stringify({...data}));
+    this.debug.msg(JSON.stringify({...this.gameService.gameState}));*/
 
     const updatePackage = { ...data }
 
     /*const updatedState = { ...this.gameService.gameState, ...data };
-    console.log('== Dice', updatedState.dice);*/
+    this.debug.msg('== Dice', updatedState.dice);*/
     updatePackage.currentPlayerIndex = updatePackage.currentPlayerIndex ?? 0;
     updatePackage.currentPlayerId = updatePackage.currentPlayerId ?? 'not set';
     updatePackage.finalRound = updatePackage.finalRound || false;
@@ -105,7 +107,7 @@ export class GameService {
     updatePackage.bankedThisTurn = updatePackage.activeBankedDice || [];
     updatePackage.scoringOptions = updatePackage.activeScoringOptions || [];
 
-    console.log('[GameService | setupGameState] updatePackage', updatePackage);
+    this.debug.msg('[GameService | setupGameState] updatePackage', updatePackage);
     this.updateGameState(updatePackage);
   }
 
@@ -117,7 +119,7 @@ export class GameService {
       noScoreMessage: false,
       bankedSinceLastRoll: false,
     }
-    console.log(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(updatePkg.dice)}`);
+    this.debug.msg(`[GameService] firing resetDice().  Reroll: ${reroll} | Dice: ${JSON.stringify(updatePkg.dice)}`);
     if (!reroll) {
       const rerollData = {
         bankedDice: [],
@@ -128,7 +130,7 @@ export class GameService {
       updatePkg = { ...updatePkg, ...rerollData}
     }
 
-    console.log('-- updating gameState from resetDice()', updatePkg);
+    this.debug.msg('-- updating gameState from resetDice()', updatePkg);
     this.updateGameState(updatePkg);
   }
 
@@ -138,7 +140,7 @@ export class GameService {
       newState.gameId = gameId;
     }
 
-    console.log('[gameState update] from resetGame', newState.dice);
+    this.debug.msg('[gameState update] from resetGame', newState.dice);
     this.updateGameState(newState);
   }
 }
