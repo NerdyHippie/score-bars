@@ -42,74 +42,45 @@ export class GameComponent implements OnInit, OnDestroy {
   myPlayerId: string = '';
   myTurn = true;
 
-  gameState: GameState = this.gameService.gameState.value
+  gameState: GameState = this.gameService.gameState
 
   displayDice: number[] = []; // used for randomized visuals
 
   loading = true;
+  gameInitialized = false;
 
   ngOnInit() {
     const gameId = this.route.snapshot.paramMap.get('id') ?? '';
     if (!gameId) {
       console.error('[GameComponent|onInit] No game ID in route');
       return;
-    } else {
-      console.log(`[GameComponent|onInit] Game ID: ${gameId}`);
     }
 
-    this.gameService.gameState.subscribe(state => {
+    this.gameService.loadGame(gameId);
+
+
+
+    this.gameService.gameState$.subscribe(state => {
       this.gameState = state;
-      console.log('[GameComponent|GameState] state changed: ', this.gameState.dice);
+      console.log('[GameComponent|gameState$] state changed: ', this.gameState);
+
+      if (state.gameId && !this.gameInitialized) {
+        this.initGame();
+      }
     });
 
-    this.gameSub = this.gameService.loadGame(gameId).subscribe((data: any) => {
-      console.log('[GameComponent|gameSub] Game Loaded with data: ', data)
+    const state = { ...this.gameService.gameState };
 
-      if (!data.gameId) {
-        data.gameId = gameId;
-      }
+    // console.log('[GameComponent|onInit] Game Loaded with state: ', JSON.stringify(state), JSON.stringify(this.gameState));
 
-      this.updateGameState(data);
 
-      const state = { ...this.gameService.gameState.value };
+    console.warn('TODO: Why the hell is dice geting reset to a blank array here???', state.hasRolled, this.myTurn, state.dice)
+    // console.log('-- updating gameState from inside gameSub', JSON.stringify(state));
+    // this.gameService.updateGameState(state);
 
-      if (!this.myPlayerId) {
-        this.myPlayerId = state.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
-      }
-
-      this.myTurn = state.gameMode === 'local' || state.currentPlayerId === this.myPlayerId;
-
-      if (!state.hasRolled) {
-        if (this.myTurn) {
-          this.resetDice();
-        } else {
-          state.dice = this.diceService.getWaitingDice();
-        }
-      }
-      console.warn('TODO: Why the hell is dice geting reset to a blank array here???', state.hasRolled, this.myTurn, state.dice)
-      console.log('-- updating gameState from inside gameSub', state.dice, state.hasRolled, this.myTurn);
-      this.gameService.gameState.next(state);
-      this.zone.run(() => this.loading = false);
-
-    });
   }
 
-  updateGameState(data: any) {
-    const updatedState = { ...this.gameService.gameState.value, ...data };
-    console.log('== Dice', updatedState.dice);
-    updatedState.currentPlayerIndex = updatedState.currentPlayerIndex ?? 0;
-    updatedState.currentPlayerId = updatedState.currentPlayerId ?? 'not set';
-    updatedState.finalRound = updatedState.finalRound || false;
-    updatedState.finalRoundStarterIndex = updatedState.finalRoundStarterIndex ?? null;
-    updatedState.gameOver = updatedState.gameOver || false;
-    updatedState.winnerName = updatedState.winnerName || '';
 
-    // updatedState.dice = updatedState.dice || [];
-    updatedState.bankedThisTurn = updatedState.activeBankedDice || [];
-    updatedState.scoringOptions = updatedState.activeScoringOptions || [];
-
-    this.gameService.gameState.next(updatedState);
-  }
 
   ngOnDestroy() {
     this.gameSub?.unsubscribe();
@@ -127,6 +98,33 @@ export class GameComponent implements OnInit, OnDestroy {
     return this.gameService.getActivePlayerName()
   }
 
+  getWaitingDice(): number[] {
+    // TODO: gotta update game state here somehow
+    return this.diceService.getWaitingDice();
+  }
+
+  initGame() {
+    this.gameInitialized = true;
+    const state = this.gameService.gameState;
+    if (!this.myPlayerId) {
+      this.myPlayerId = state.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
+    }
+
+    this.myTurn = state.gameMode === 'local' || state.currentPlayerId === this.myPlayerId;
+
+    if (!state.hasRolled) {
+      if (this.myTurn) {
+        console.log('[GameComponent] my turn.  Reset dice!')
+        this.resetDice();
+      } else {
+        console.log('[GameComponent] NOT my turn.  Get WAIT dice!');
+        this.gameService.updateGameState({dice: this.getWaitingDice()});
+      }
+    }
+
+    this.zone.run(() => this.loading = false);
+  }
+
   resetDice(reroll: boolean = false) {
     console.log('** firing resetDice')
     this.gameService.resetDice(reroll);
@@ -137,7 +135,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   rollDice() {
-    const state = this.gameService.gameState.value;
+    const state = this.gameService.gameState;
     if (state.gameOver || this.isRollAgainBlocked()) return;
 
     const diceToRoll = Math.max(0,
@@ -152,10 +150,10 @@ export class GameComponent implements OnInit, OnDestroy {
     state.allDiceScoredMessage = false;
     state.bankedSinceLastRoll = false;
     console.log('-- updating gameState from rollDice()', state.dice);
-    this.gameService.gameState.next(state);
+    this.gameService.updateGameState(state);
 
     setTimeout(() => {
-      const s = this.gameService.gameState.value;
+      const s = this.gameService.gameState;
       s.dice = newRoll;
       this.displayDice = [...newRoll];
       s.rolling = false;
@@ -172,7 +170,9 @@ export class GameComponent implements OnInit, OnDestroy {
         s.noScoreMessage = true;
         s.turnScore = 0;
       }
-      this.gameService.gameState.next(s);
+
+      console.log('[gameState update] from rollDice', s.dice);
+      this.gameService.updateGameState(s);
     }, 800);
   }
 
@@ -196,7 +196,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   async endTurn() {
-    const state = this.gameService.gameState.value;
+    const state = this.gameService.gameState;
     if (state.gameOver || !this.myTurn || (state.turnScore === 0 && state.scoringOptions.length > 0)) return;
 
     const player = state.players[state.currentPlayerIndex];
@@ -264,7 +264,9 @@ export class GameComponent implements OnInit, OnDestroy {
     state.hasRolled = false;
     state.bankedSinceLastRoll = false;
     state.currentPlayerIndex = nextIndex;
-    this.gameService.gameState.next(state);
+
+    console.log('[gameState update] from endTurn', state.dice);
+    this.gameService.updateGameState(state);
     this.resetDice();
   }
 }

@@ -24,10 +24,10 @@ export class ScoreOptionsDisplay implements OnInit {
   /*@Output() calcScores = new EventEmitter<void>();
   @Output() diceReset = new EventEmitter<boolean | void>();*/
 
-  gameState: GameState = this.gameService.gameState.value
+  gameState: GameState = this.gameService.gameState
 
   ngOnInit(): void {
-    this.gameService.gameState.subscribe(state => this.gameState = state);
+    this.gameService.gameState$.subscribe(state => this.gameState = state);
   }
 
   getDieImage(value: number) {
@@ -35,7 +35,7 @@ export class ScoreOptionsDisplay implements OnInit {
   }
 
   bank(option: ScoreOption) {
-    const state = this.gameService.gameState.value;
+    const state = this.gameService.gameState;
     if (state.gameOver || !this.myTurn || state.bankedDice.length + option.dice.length > 6) return;
 
     state.turnScore += option.score;
@@ -67,14 +67,16 @@ export class ScoreOptionsDisplay implements OnInit {
       state.bankedDice = [];
       state.allDiceScoredMessage = true;
     }
-    this.gameService.gameState.next(state);
+
+    console.log('[gameState update] from bank()', state.dice);
+    this.gameService.updateGameState(state);
   }
 
 
 
   persistGameState() {
-    console.log('[persistGameState] saving dice, bankedDice, scoringOptions');
-    const state = this.gameService.gameState.value;
+    const state = this.gameService.gameState;
+    console.log('[persistGameState] saving dice, bankedDice, scoringOptions', state.dice);
     updateDoc(doc(this.firestore, `games/${state.gameId}`), {
       activeDice: state.dice,
       activeBankedDice: state.bankedThisTurn,
