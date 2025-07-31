@@ -42,7 +42,7 @@ export class GameComponent implements OnInit, OnDestroy {
   gameSub!: Subscription;
 
   myPlayerId: string = '';
-  myTurn = true;
+  myTurn = false;
 
   gameState: GameState = this.gameService.gameState
 
@@ -64,9 +64,15 @@ export class GameComponent implements OnInit, OnDestroy {
       this.gameState = state;
       this.debug.msg('[GameComponent|gameState$] state changed: ', this.gameState);
 
+      this.zone.run(() => {
+        this.myTurn = state.gameMode === 'local' || state.currentPlayerId === this.myPlayerId;
+        console.log(this.myTurn, state.currentPlayerId, this.myPlayerId);
+      })
+
       if (state.gameId && !this.gameInitialized) {
         this.initGame();
       }
+
     });
   }
 
@@ -98,8 +104,6 @@ export class GameComponent implements OnInit, OnDestroy {
     if (!this.myPlayerId) {
       this.myPlayerId = state.gameMode === 'local' ? '1' : this.authService.getCurrentUserId();
     }
-
-    this.myTurn = state.gameMode === 'local' || state.currentPlayerId === this.myPlayerId;
 
     if (!state.hasRolled) {
       if (this.myTurn) {
