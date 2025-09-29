@@ -24,7 +24,7 @@ export class ScoreOptionsDisplay implements OnInit {
   /*@Output() calcScores = new EventEmitter<void>();
   @Output() diceReset = new EventEmitter<boolean | void>();*/
 
-  gameState: GameState = this.gameService.gameState
+  gameState: GameState = this.gameService.gameState;
 
   ngOnInit(): void {
     this.gameService.gameState$.subscribe(state => this.gameState = state);
