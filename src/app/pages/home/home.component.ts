@@ -39,10 +39,9 @@ export class HomeComponent implements OnInit {
     private authService: AuthService
   ) {
     this.games$ = this.authService.UserData.pipe(
-      tap(user => console.log('[DEBUG] UserData emitted:', user)),
+      // tap(user => console.log('[DEBUG] UserData emitted:', user)),
       filter(user => !!user?.uid),
       switchMap(async user => {
-        console.log('Hello!')
         const gamesRef = collection(this.firestore, 'games');
 
         const createdByQuery = query(gamesRef, where('createdBy', '==', user!.uid));
@@ -66,7 +65,7 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
 
-    console.log('usrData',this.authService.UserData.value)
+    // console.log('usrData',this.authService.UserData.value)
   }
 
   goToGame(gameId: string): void {

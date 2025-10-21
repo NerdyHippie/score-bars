@@ -1,4 +1,4 @@
-import { Component, OnInit, QueryList, ViewChildren, ElementRef, inject } from '@angular/core';
+import {Component, OnInit, QueryList, ViewChildren, ElementRef, inject, NgZone} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   Firestore,
@@ -37,6 +37,7 @@ export class NewGameComponent implements OnInit {
   private router = inject(Router);
   private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private zone = inject(NgZone);
 
   ngOnInit(): void {
     this.gameMode = this.route.snapshot.queryParamMap.get('gameMode') as any;
@@ -56,7 +57,11 @@ export class NewGameComponent implements OnInit {
       // Real-time sync of joined players
       onSnapshot(lobbyRef, (snapshot) => {
         const data = snapshot.data();
-        this.joinedPlayers = data?.['players'] ?? [];
+        console.log('snapshot data', data);
+        this.zone.run(() => {
+          this.joinedPlayers = data?.['players'] ?? [];
+        })
+        console.log('joined players', this.joinedPlayers);
       });
     } else if (this.gameMode === 'solo') {
       this.players = [{ name: this.playerName, uid: this.authService.getCurrentUserId(), score: 0, eliminated: false }];
