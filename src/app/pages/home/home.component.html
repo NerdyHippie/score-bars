@@ -5,10 +5,12 @@
 <div class="games-section" *ngIf="games$ | async as games">
 
   <h2>In Progress</h2>
-  <div *ngFor="let game of getInProgressGames(games)" class="game-card" (click)="goToGame(game.id)">
+  <div *ngFor="let game of getInProgressGames(games)" class="game-card" [ngClass]="getGameMode(game)" (click)="goToGame(game.gameId)">
     <div class="game-content">
       <div class="players">{{ getPlayerInfo(game) }}</div>
       <div class="timestamp">Started on {{ getStartDate(game) }}</div>
+
+      <!--<pre [innerHTML]="game | prettyjson: [false]"></pre>-->
     </div>
     <button mat-icon-button class="delete-btn" (click)="confirmDelete(game); $event.stopPropagation()">
       <mat-icon>delete</mat-icon>

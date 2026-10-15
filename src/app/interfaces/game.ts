@@ -1,6 +1,6 @@
 import {Player} from './player';
 
-export interface Game {
+export interface GameState {
   id: string;
   players: Player[];
   createdAt: any;

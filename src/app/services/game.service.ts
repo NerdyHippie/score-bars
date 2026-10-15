@@ -3,8 +3,9 @@ import {BehaviorSubject, Subscription} from 'rxjs';
 import {GameState} from '../interfaces/game-state';
 import {DiceService} from './dice.service';
 import {ScoringService} from './scoring.service';
-import {doc, docData, Firestore} from '@angular/fire/firestore';
+import {doc, docData, Firestore, serverTimestamp} from '@angular/fire/firestore';
 import {DebugService} from './debug.service';
+import {AuthService} from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +38,8 @@ export class GameService {
     gameOver: false,
     winnerName: '',
     bankedSinceLastRoll: true,
+    createdAt: null,
+    createdBy: null,
   };
 
   public gameStateSubject = new BehaviorSubject<GameState>(this.initialState);
@@ -44,7 +47,9 @@ export class GameService {
 
   private gameSub!: Subscription
 
-  constructor() { }
+  constructor(
+    private authService: AuthService
+  ) { }
 
   get gameState(): GameState {
     return this.gameStateSubject.value;
@@ -88,7 +93,7 @@ export class GameService {
   }
 
   setupGameState(data: any) {
-    this.debug.msg('[updateGameState]');
+    this.debug.msg('[setupGameState]');
     /*this.debug.msg(JSON.stringify({...data}));
     this.debug.msg(JSON.stringify({...this.gameService.gameState}));*/
 
@@ -106,6 +111,14 @@ export class GameService {
     // updatedState.dice = updatedState.dice || [];
     updatePackage.bankedThisTurn = updatePackage.activeBankedDice || [];
     updatePackage.scoringOptions = updatePackage.activeScoringOptions || [];
+
+    if (updatePackage.createdAt === null) {
+      updatePackage.createdAt = serverTimestamp();
+    }
+
+    if (updatePackage.createdBy === null) {
+      updatePackage.createdBy = this.authService.getCurrentUserId();
+    }
 
     this.debug.msg('[GameService | setupGameState] updatePackage', updatePackage);
     this.updateGameState(updatePackage);

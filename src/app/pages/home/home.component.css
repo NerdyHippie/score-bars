@@ -20,15 +20,24 @@
   justify-content: space-between;
   align-items: center;
   background-color: #f2f4f7;
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   border-radius: 10px;
   padding: 1rem;
   margin-top: 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-.games-section .game-card:hover {
-  background-color: #e6e9ec;
+.games-section .game-card.game-mode-remote {
+  background-color: rgb(98, 158, 222);
+}
+.games-section .game-card.game-mode-remote:hover {
+  background-color: #77abe2;
+}
+.games-section .game-card.game-mode-local {
+  background-color: rgba(214, 139, 139, 0.93);
+}
+.games-section .game-card.game-mode-local:hover {
+  background-color: rgba(221, 158, 158, 0.93);
 }
 .games-section .game-card.finished {
   background-color: #e0e0e0;

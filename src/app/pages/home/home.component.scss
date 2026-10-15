@@ -1,3 +1,5 @@
+@import "../../shared-styles/palette";
+
 .home-header {
   display: flex;
   justify-content: center;
@@ -21,16 +23,27 @@
     justify-content: space-between;
     align-items: center;
     background-color: #f2f4f7;
-    border: 1px solid #ccc;
+    border: 1px solid #000;
     border-radius: 10px;
     padding: 1rem;
     margin-top: 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    &:hover {
-      background-color: #e6e9ec;
+
+    &.game-mode-remote {
+      background-color: $game-mode-blue;
+      &:hover {
+        background-color: lighten($game-mode-blue, 5);
+      }
     }
+    &.game-mode-local {
+      background-color: $game-mode-red;
+      &:hover {
+        background-color: lighten($game-mode-red, 5);
+      }
+    }
+
 
     &.finished {
       background-color: #e0e0e0;
@@ -58,3 +71,4 @@
     }
   }
 }
+

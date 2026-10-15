@@ -11,8 +11,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NewGameModalComponent } from '../../components/new-game-modal/new-game-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
-import { Game } from '../../interfaces/game';
+import { GameState } from '../../interfaces/game-state';
 import { AuthService } from '../../services/auth.service';
+import {PrettyJsonPipe} from '../../pipes/pretty-json-pipe';
 
 @Component({
   selector: 'app-home',
@@ -24,13 +25,14 @@ import { AuthService } from '../../services/auth.service';
     MatListModule,
     FormsModule,
     MatDialogModule,
-    MatIconModule
+    MatIconModule,
+    PrettyJsonPipe
   ],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  games$: Observable<Game[]>;
+  games$: Observable<GameState[]>;
   private dialog = inject(MatDialog);
 
   constructor(
@@ -52,9 +54,9 @@ export class HomeComponent implements OnInit {
           // getDocs(playerUidsQuery)
         ]);
 
-        const gamesMap = new Map<string, Game>();
+        const gamesMap = new Map<string, GameState>();
 
-        createdBySnap.forEach(doc => gamesMap.set(doc.id, { id: doc.id, ...doc.data() } as Game));
+        createdBySnap.forEach(doc => gamesMap.set(doc.id, { gameId: doc.id, ...doc.data() } as GameState));
         // playerUidsSnap.forEach(doc => gamesMap.set(doc.id, { id: doc.id, ...doc.data() } as Game));
 
         return Array.from(gamesMap.values());
@@ -72,6 +74,11 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/game', gameId]);
   }
 
+  getGameMode(game: GameState): string {
+    console.log(game);
+    return "game-mode-" + game.gameMode;
+  }
+
   startNewGame() {
     const dialogRef = this.dialog.open(NewGameModalComponent, {
       width: '464px',
@@ -84,30 +91,30 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  getPlayerInfo(game: Game): string {
+  getPlayerInfo(game: GameState): string {
     return game.players?.map((p, i) => `${p.name} (${p.score})`).join(', ') || '';
   }
 
-  getStartDate(game: Game): string {
+  getStartDate(game: GameState): string {
     const date = game.createdAt?.toDate?.() || new Date();
     return `${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   }
 
-  confirmDelete(game: Game) {
+  confirmDelete(game: GameState) {
     const dialogRef = this.dialog.open(ConfirmDeleteDialog);
     dialogRef.afterClosed().subscribe(result => {
       if (result === 'confirm') {
-        const gameRef = doc(this.firestore, 'games', game.id);
+        const gameRef = doc(this.firestore, 'games', game.gameId);
         deleteDoc(gameRef);
       }
     });
   }
 
-  getInProgressGames(games: Game[]): Game[] {
+  getInProgressGames(games: GameState[]): GameState[] {
     return games.filter(game => !game.gameIsFinished);
   }
 
-  getFinishedGames(games: Game[]): Game[] {
+  getFinishedGames(games: GameState[]): GameState[] {
     return games.filter(game => game.gameIsFinished);
   }
 }
